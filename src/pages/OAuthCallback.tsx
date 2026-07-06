@@ -19,11 +19,7 @@ const OAuthCallback = () => {
 
   useEffect(() => {
     if (user) {
-      if (user.role === 'ADMIN' || user.role === 'admin') {
-        navigate("/admin");
-      } else {
-        navigate("/dashboard");
-      }
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 
