@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Minus, Edit2, Shield, Loader2, UserCog, Crown, Gem, Award } from "lucide-react";
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const TIERS = ["Bronze", "Silver", "Gold", "Platinum", "Diamond"];
 
@@ -34,7 +35,10 @@ const tierColor = (tier: string) => {
 const AdminUsers = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
+  const { currencies } = useCurrency();
 
   // Balance dialog
   const [balDialog, setBalDialog] = useState(false);
@@ -85,8 +89,8 @@ const AdminUsers = () => {
   useEffect(() => { fetchUsers(); }, []);
 
   const filtered = users.filter(u => {
-    if (!search) return true;
-    const q = search.toLowerCase();
+    if (!query) return true;
+    const q = query.toLowerCase();
     return (u.email?.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q) || u.user_id?.includes(q));
   });
 
@@ -97,12 +101,16 @@ const AdminUsers = () => {
       toast({ title: "Invalid amount", variant: "destructive" });
       return;
     }
+    const cObj = currencies.find(c => c.code === (balUser.currency || "USD"));
+    const rate = cObj ? Number(cObj.rate) || 1 : 1;
+    const amountInUSD = amt / rate;
+
     setBalSubmitting(true);
     
     try {
       await apiClient.post(`/admin/users/${balUser.user_id}/balance`, {
         action: balAction,
-        amount: amt
+        amount: amountInUSD
       });
       toast({ title: `Balance ${balAction === "add" ? "added" : "removed"}` });
       setBalDialog(false);
@@ -123,7 +131,12 @@ const AdminUsers = () => {
     if (editTier !== (editUser.tier || editUser.loyalty)) updates.tier = editTier;
     if (editUsername !== editUser.username) updates.username = editUsername;
     if (editCurrency !== editUser.currency) updates.currency = editCurrency;
-    if (editBalance !== String(editUser.balance)) updates.balance = parseFloat(editBalance);
+    
+    const currencyObj = currencies.find(c => c.code === editCurrency);
+    const rate = currencyObj ? Number(currencyObj.rate) || 1 : 1;
+    const balanceInUSD = (parseFloat(editBalance) || 0) / rate;
+    
+    if (Math.abs(balanceInUSD - (editUser.balance || 0)) > 0.001) updates.balance = balanceInUSD;
     if (editRole !== editUser.role) updates.role = editRole;
     if (editStatus !== (editUser.status === true || editUser.status === 'Active' ? 'Active' : 'Inactive')) updates.status = editStatus;
     
@@ -131,8 +144,9 @@ const AdminUsers = () => {
       try {
         await apiClient.patch(`/admin/users/${editUser.id || editUser.user_id}`, updates);
         toast({ title: "User updated" });
-      } catch (e) {
-        toast({ title: "Failed to update user", variant: "destructive" });
+      } catch (e: any) {
+        console.error("User update error:", e.response?.data || e.message);
+        toast({ title: "Failed to update user", description: e.response?.data?.message || e.message, variant: "destructive" });
       }
     }
     
@@ -175,7 +189,12 @@ const AdminUsers = () => {
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search users..." className="pl-9 h-10 bg-card border-border rounded-xl" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input placeholder="Search users..." className="pl-9 h-10 bg-card border-border rounded-xl" value={search} onChange={(e) => {
+              setSearch(e.target.value);
+              startTransition(() => {
+                setQuery(e.target.value);
+              });
+            }} />
           </div>
           <Button onClick={() => setAddDialog(true)} className="rounded-xl h-10 px-4 gap-2 shrink-0">
             <Plus className="h-4 w-4" /> Add User
@@ -183,7 +202,7 @@ const AdminUsers = () => {
         </div>
       </div>
 
-      {loading ? (
+      {loading || isPending ? (
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : (
         <div className="space-y-2">
@@ -210,7 +229,13 @@ const AdminUsers = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                    <span className="text-sm font-bold text-primary">${Number(u.balance).toFixed(2)}</span>
+                    <span className="text-sm font-bold text-primary">
+                      {(() => {
+                        const cObj = currencies.find(c => c.code === (u.currency || "USD"));
+                        const rate = cObj ? Number(cObj.rate) || 1 : 1;
+                        return `${cObj?.symbol || "$"}${((u.balance || 0) * rate).toFixed(2)}`;
+                      })()}
+                    </span>
                     <button
                       onClick={() => { setBalUser(u); setBalAction("add"); setBalDialog(true); }}
                       className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-all active:scale-95"
@@ -232,7 +257,9 @@ const AdminUsers = () => {
                         setEditTier(u.tier || u.loyalty || ""); 
                         setEditUsername(u.username || "");
                         setEditCurrency(u.currency || "USD");
-                        setEditBalance(String(u.balance || 0));
+                        const cObj = currencies.find(c => c.code === (u.currency || "USD"));
+                        const rate = cObj ? Number(cObj.rate) || 1 : 1;
+                        setEditBalance(String(((u.balance || 0) * rate).toFixed(2)));
                         setEditRole(u.role || "USER");
                         setEditStatus(u.status === true || u.status === 'Active' ? 'Active' : 'Inactive');
                         setEditDialog(true); 
@@ -264,10 +291,16 @@ const AdminUsers = () => {
             <div className="rounded-xl bg-secondary p-3">
               <div className="text-xs text-muted-foreground">User</div>
               <div className="text-sm font-medium break-all">{balUser?.email}</div>
-              <div className="text-xs text-muted-foreground mt-1">Current balance: <span className="text-primary font-semibold">${Number(balUser?.balance || 0).toFixed(2)}</span></div>
+              <div className="text-xs text-muted-foreground mt-1">Current balance: <span className="text-primary font-semibold">
+                {(() => {
+                  const cObj = currencies.find(c => c.code === (balUser?.currency || "USD"));
+                  const rate = cObj ? Number(cObj.rate) || 1 : 1;
+                  return `${cObj?.symbol || "$"}${((balUser?.balance || 0) * rate).toFixed(2)}`;
+                })()}
+              </span></div>
             </div>
             <div>
-              <Label className="text-sm font-medium">Amount ($)</Label>
+              <Label className="text-sm font-medium">Amount ({currencies.find(c => c.code === (balUser?.currency || "USD"))?.symbol || "$"})</Label>
               <Input type="number" min={0} step="0.01" placeholder="0.00" className="h-11 bg-secondary border-border rounded-xl mt-1.5" value={balAmount} onChange={(e) => setBalAmount(e.target.value)} />
             </div>
           </div>
@@ -276,8 +309,8 @@ const AdminUsers = () => {
             <Button
               className={`rounded-xl ${balAction === "remove" ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : ""}`}
               onClick={() => showConfirm(
-                `${balAction === "add" ? "Add" : "Remove"} $${balAmount}?`,
-                `This will ${balAction === "add" ? "add" : "remove"} $${balAmount} ${balAction === "add" ? "to" : "from"} ${balUser?.email}'s balance.`,
+                `${balAction === "add" ? "Add" : "Remove"} ${currencies.find(c => c.code === (balUser?.currency || "USD"))?.symbol || "$"}${balAmount}?`,
+                `This will ${balAction === "add" ? "add" : "remove"} ${currencies.find(c => c.code === (balUser?.currency || "USD"))?.symbol || "$"}${balAmount} ${balAction === "add" ? "to" : "from"} ${balUser?.email}'s balance.`,
                 handleBalanceSubmit
               )}
               disabled={balSubmitting || !balAmount}
@@ -310,17 +343,25 @@ const AdminUsers = () => {
               </div>
               <div>
                 <Label className="text-sm font-medium">Currency</Label>
-                <Select value={editCurrency} onValueChange={setEditCurrency}>
+                <Select value={editCurrency} onValueChange={(val) => {
+                  const oldC = currencies.find(c => c.code === editCurrency);
+                  const oldRate = oldC ? Number(oldC.rate) || 1 : 1;
+                  const newC = currencies.find(c => c.code === val);
+                  const newRate = newC ? Number(newC.rate) || 1 : 1;
+                  const usdVal = (parseFloat(editBalance) || 0) / oldRate;
+                  setEditCurrency(val);
+                  setEditBalance((usdVal * newRate).toFixed(2));
+                }}>
                   <SelectTrigger className="h-11 bg-secondary border-border rounded-xl mt-1.5"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
-                    <SelectItem value="NPR">NPR (Rs)</SelectItem>
+                    {currencies.map(c => (
+                      <SelectItem key={c.code} value={c.code}>{c.code} ({c.symbol})</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label className="text-sm font-medium">Balance (USD) *</Label>
+                <Label className="text-sm font-medium">Balance ({editCurrency}) *</Label>
                 <Input type="number" step="0.01" className="h-11 bg-secondary border-border rounded-xl mt-1.5" value={editBalance} onChange={(e) => setEditBalance(e.target.value)} />
               </div>
               <div>

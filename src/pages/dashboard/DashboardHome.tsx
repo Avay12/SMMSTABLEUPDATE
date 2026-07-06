@@ -12,6 +12,7 @@ import { apiClient } from "@/lib/apiClient";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const platformIcons: Record<string, string> = {
+  // ... (unchanged part omitted for brevity, let's keep it complete though)
   Instagram: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg",
   TikTok: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg",
   YouTube: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg",
@@ -26,6 +27,16 @@ const platformIcons: Record<string, string> = {
   Snapchat: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/snapchat.svg",
   Kick: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/kick.svg",
   "Website Traffic": "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/googlechrome.svg",
+};
+
+const formatAvgTime = (mins?: string | number) => {
+  if (!mins) return "";
+  const num = parseInt(mins.toString(), 10);
+  if (isNaN(num) || num <= 0) return "";
+  if (num < 60) return `${num} min${num !== 1 ? 's' : ''}`;
+  const hours = Math.floor(num / 60);
+  const m = num % 60;
+  return `${hours} hr${hours !== 1 ? 's' : ''}${m > 0 ? ` ${m} min` : ''}`;
 };
 
 type Step = "idle" | "platform" | "service" | "details";
@@ -312,6 +323,15 @@ const DashboardHome = () => {
                 <p className="text-xs text-muted-foreground mt-1">
                   Min: {selected.min.toLocaleString()} • Max: {selected.max.toLocaleString()}
                 </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Average Time</label>
+                <Input
+                  value={selected.average_time ? formatAvgTime(selected.average_time) : 'Not available'}
+                  readOnly
+                  className="bg-secondary border-border h-12 text-muted-foreground cursor-not-allowed opacity-80"
+                />
               </div>
 
               <div className="flex items-center justify-between rounded-xl bg-secondary px-4 py-3">

@@ -5,6 +5,7 @@ import { Search, Loader2, RefreshCw, DollarSign, CheckCircle2 } from "lucide-rea
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
@@ -13,7 +14,7 @@ const AdminPayments = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
-  const { formatCurrency, currentCurrency } = useCurrency();
+  const { formatCurrency, currentCurrency, currencies } = useCurrency();
 
   const fetchPayments = async () => {
     setLoading(true);
@@ -60,12 +61,33 @@ const AdminPayments = () => {
     );
   });
 
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 15;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedPayments = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
+  const nprCurrency = currencies?.find(c => c.code === 'NPR') || { rate: 134, symbol: 'Rs' };
+  
+  const totalUnpaidNPR = payments.filter(p => !p.is_paid).reduce((acc, p) => {
+    let amt = parseFloat(p.amount) || 0;
+    if (p.currency === 'NPR') return acc + amt;
+    return acc + (amt * nprCurrency.rate);
+  }, 0);
+  const unpaidCount = payments.filter(p => !p.is_paid).length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight">Payment Orders</h2>
-          <p className="text-sm text-muted-foreground">{payments.length} total records</p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight">Payment Orders</h2>
+            <p className="text-sm text-muted-foreground mt-1">{payments.length} total records</p>
+          </div>
+          <div className="h-10 w-px bg-border mx-2 hidden sm:block"></div>
+          <div className="flex flex-col rounded-xl border border-orange-500/20 bg-orange-500/5 px-4 py-2 shadow-sm">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-orange-600/80">Pending Action</span>
+            <span className="text-sm font-bold text-orange-600">{unpaidCount} unpaid ({nprCurrency.symbol}{(totalUnpaidNPR).toFixed(2)})</span>
+          </div>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-72">
@@ -90,73 +112,68 @@ const AdminPayments = () => {
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-secondary/50 text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Transaction ID</th>
-                  <th className="px-4 py-3 font-medium">User</th>
-                  <th className="px-4 py-3 font-medium">Amount</th>
-                  <th className="px-4 py-3 font-medium">Gateway</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Date</th>
-                  <th className="px-4 py-3 font-medium text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                <AnimatePresence>
-                  {filtered.map((p, i) => (
-                    <motion.tr
-                      key={p.transactionId || i}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ delay: i * 0.02, duration: 0.3 }}
-                      className="hover:bg-muted/50 transition-colors"
-                    >
-                      <td className="px-4 py-3 font-mono text-xs">{p.transactionId}</td>
-                      <td className="px-4 py-3">
-                        <div className="font-medium">{typeof p.user === 'string' ? p.user : 'Unknown'}</div>
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-primary">
-                        {p.amount} {p.currency || "USD"}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.gateway || p.method || "Manual"}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline" className={`text-[10px] ${p.is_paid ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-orange-500/10 text-orange-500 border-orange-500/20'}`}>
-                          {p.is_paid ? 'paid' : 'unpaid'}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {new Date(p.createdAt || p.date).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {!p.is_paid && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="rounded-lg h-8 px-3 text-xs border-border bg-secondary hover:bg-muted transition-all active:scale-95"
-                            onClick={() => handleUpdatePaid(p.transactionId)}
-                            disabled={updating === p.transactionId}
-                          >
-                            {updating === p.transactionId ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : null}
-                            Update Paid
-                          </Button>
-                        )}
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-                {filtered.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="text-center text-muted-foreground py-16 text-sm">
-                      No payment orders found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader className="bg-secondary/20 sticky top-0">
+              <TableRow className="border-border/50">
+                <TableHead className="text-xs font-medium w-24">Date</TableHead>
+                <TableHead className="text-xs font-medium">User</TableHead>
+                <TableHead className="text-xs font-medium w-32">Amount</TableHead>
+                <TableHead className="text-xs font-medium w-32">Status</TableHead>
+                <TableHead className="text-xs font-medium">Transaction ID</TableHead>
+                <TableHead className="text-xs font-medium text-right w-32">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedPayments.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                    No payment orders found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedPayments.map((p, i) => (
+                  <TableRow key={p.transactionId || i} className="hover:bg-muted/50 transition-colors">
+                    <TableCell className="text-muted-foreground">
+                      {new Date(p.createdAt || p.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="font-medium">{typeof p.user === 'string' ? p.user : 'Unknown'}</TableCell>
+                    <TableCell className="font-semibold text-primary">{p.amount} {p.currency || "USD"}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`text-[10px] ${p.is_paid ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-orange-500/10 text-orange-500 border-orange-500/20'}`}>
+                        {p.is_paid ? 'paid' : 'unpaid'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">{p.transactionId}</TableCell>
+                    <TableCell className="text-right">
+                      {!p.is_paid && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="rounded-lg h-8 px-3 text-xs border-border bg-secondary hover:bg-muted transition-all active:scale-95"
+                          onClick={() => handleUpdatePaid(p.transactionId)}
+                          disabled={updating === p.transactionId}
+                        >
+                          {updating === p.transactionId ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : null}
+                          Update Paid
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between p-4 border-t border-border/50 bg-secondary/10">
+              <span className="text-xs text-muted-foreground">
+                Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filtered.length)} of {filtered.length} entries
+              </span>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="h-8 rounded-lg px-4">Prev</Button>
+                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="h-8 rounded-lg px-4">Next</Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

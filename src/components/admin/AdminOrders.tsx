@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useTransition } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Loader2, RefreshCw, RotateCcw } from "lucide-react";
@@ -9,22 +9,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 
-const STATUSES = ["All", "Pending", "Processing", "In progress", "Completed", "Partial", "Cancelled", "Refunded"];
+const STATUSES = ["All", "Pending", "Processing", "In progress", "Completed", "Partial", "Cancelled", "Refunded", "Failed"];
 
 const statusColor = (s: string) => {
-  switch (s) {
-    case "Completed": return "bg-[hsl(var(--fame-success))]/10 text-[hsl(var(--fame-success))] border-[hsl(var(--fame-success))]/20";
-    case "Pending": return "bg-[hsl(var(--fame-orange))]/10 text-[hsl(var(--fame-orange))] border-[hsl(var(--fame-orange))]/20";
-    case "Processing": case "In progress": return "bg-primary/10 text-primary border-primary/20";
-    case "Cancelled": case "Refunded": return "bg-destructive/10 text-destructive border-destructive/20";
-    default: return "bg-muted text-muted-foreground border-border";
+  switch (s?.toLowerCase()) {
+    case "completed": return "bg-[hsl(var(--fame-success))]/10 text-[hsl(var(--fame-success))] border-[hsl(var(--fame-success))]/20 hover:bg-[hsl(var(--fame-success))]/20";
+    case "pending": return "bg-[hsl(var(--fame-orange))]/10 text-[hsl(var(--fame-orange))] border-[hsl(var(--fame-orange))]/20 hover:bg-[hsl(var(--fame-orange))]/20";
+    case "processing": case "in progress": return "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20";
+    case "cancelled": case "refunded": case "failed": return "bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20";
+    case "partial": return "bg-yellow-500/10 text-yellow-600 border-yellow-500/20 hover:bg-yellow-500/20";
+    default: return "bg-secondary text-muted-foreground border-border hover:bg-muted";
+  }
+};
+
+const activeStatusColor = (s: string) => {
+  switch (s?.toLowerCase()) {
+    case "completed": return "bg-[hsl(var(--fame-success))] text-white border-[hsl(var(--fame-success))] shadow-sm";
+    case "pending": return "bg-[hsl(var(--fame-orange))] text-white border-[hsl(var(--fame-orange))] shadow-sm";
+    case "processing": case "in progress": return "bg-primary text-primary-foreground border-primary shadow-sm";
+    case "cancelled": case "refunded": case "failed": return "bg-destructive text-destructive-foreground border-destructive shadow-sm";
+    case "partial": return "bg-yellow-500 text-white border-yellow-500 shadow-sm";
+    case "all": return "bg-foreground text-background border-foreground shadow-sm";
+    default: return "bg-muted-foreground text-background border-muted-foreground shadow-sm";
   }
 };
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
   const [refundDialog, setRefundDialog] = useState(false);
@@ -67,8 +82,8 @@ const AdminOrders = () => {
 
   const filtered = orders.filter(o => {
     const matchesStatus = statusFilter === "All" || o.status === statusFilter;
-    if (!search) return matchesStatus;
-    const q = search.toLowerCase();
+    if (!query) return matchesStatus;
+    const q = query.toLowerCase();
     return matchesStatus && ((o.service || o.service_name)?.toLowerCase().includes(q) || o.link?.toLowerCase().includes(q) || o.id?.includes(q) || (o.username || o.user_id)?.includes(q));
   });
 
@@ -114,15 +129,20 @@ const AdminOrders = () => {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search orders..." className="pl-9 h-10 bg-card border-border rounded-xl" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input placeholder="Search orders..." className="pl-9 h-10 bg-card border-border rounded-xl" value={search} onChange={(e) => {
+            setSearch(e.target.value);
+            startTransition(() => {
+              setQuery(e.target.value);
+            });
+          }} />
         </div>
         <div className="flex gap-1.5 flex-wrap">
           {STATUSES.map(s => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 ${
-                statusFilter === s ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-muted"
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all active:scale-95 ${
+                statusFilter === s ? activeStatusColor(s) : statusColor(s)
               }`}
             >
               {s}
@@ -131,7 +151,7 @@ const AdminOrders = () => {
         </div>
       </div>
 
-      {loading ? (
+      {loading || isPending ? (
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : (
         <div className="space-y-2">
@@ -157,10 +177,11 @@ const AdminOrders = () => {
                       {o.smm_order_id && <span>SMM ID: {o.smm_order_id}</span>}
                       <span>Service ID: {o.service_id || o.serviceId || 'N/A'}</span>
                       <span>Provider: {o.provider_name || o.provider || o.providerId || 'N/A'}</span>
+                      <span>User: {o.user?.email || o.username || o.user_id || o.userId || 'N/A'}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                    <Badge variant="outline" className={`${statusColor(o.status)} text-xs`}>{o.status}</Badge>
+                    <Badge className={`${statusColor(o.status)} border-none text-xs px-2.5 py-0.5`}>{o.status}</Badge>
                     <Select defaultValue={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
                       <SelectTrigger className="h-8 w-28 text-xs rounded-lg border-border"><SelectValue /></SelectTrigger>
                       <SelectContent>

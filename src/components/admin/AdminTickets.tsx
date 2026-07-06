@@ -135,7 +135,7 @@ const AdminTickets = () => {
                   <MessageSquare className="h-3 w-3" /> Reply
                 </Button>
               )}
-              <div className="text-[10px] text-muted-foreground mt-2 font-mono">{new Date(t.createdAt).toLocaleString()} · User: {t.userId}</div>
+              <div className="text-[10px] text-muted-foreground mt-2 font-mono">{new Date(t.createdAt).toLocaleString()} · User: {t.user?.email || t.userId}</div>
             </motion.div>
           ))}
           {filtered.length === 0 && <p className="text-center text-muted-foreground py-16 text-sm">No tickets found.</p>}

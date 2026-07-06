@@ -1,15 +1,14 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useTransition, useCallback, useRef } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Loader2, RefreshCw, Check, X, Eye, EyeOff, Download, Package, Filter, ChevronDown } from "lucide-react";
+import { Search, Loader2, RefreshCw, Check, X, Download, Package, Trash2, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface Provider {
@@ -29,6 +28,7 @@ interface RemoteService {
   type: string;
   isActive?: boolean;
   providerId?: string;
+  customRate?: number;
 }
 
 function extractPlatform(category: string): string {
@@ -52,92 +52,194 @@ function extractPlatform(category: string): string {
 
 const AdminServices = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
-  const [selectedProvider, setSelectedProvider] = useState<string>("");
-  const [viewMode, setViewMode] = useState<"active" | "remote">("active");
+  
+  // Main View State (Active/Imported Services)
   const [services, setServices] = useState<RemoteService[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState("all");
+  const [categories, setCategories] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [importing, setImporting] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
-  const [importPrice, setImportPrice] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [syncing, setSyncing] = useState(false);
+
+  // Import Modal State
+  const [importOpen, setImportOpen] = useState(false);
+  const [importProvider, setImportProvider] = useState("");
+  const [remoteServices, setRemoteServices] = useState<RemoteService[]>([]);
+  const [remoteLoading, setRemoteLoading] = useState(false);
+  const [remoteSearch, setRemoteSearch] = useState("");
+  const [remoteQuery, setRemoteQuery] = useState("");
+  const [remotePlatform, setRemotePlatform] = useState("all");
+  const [remotePage, setRemotePage] = useState(1);
+  const [remoteTotalPages, setRemoteTotalPages] = useState(1);
+  const [remoteSelected, setRemoteSelected] = useState<Set<number>>(new Set());
+  const [importing, setImporting] = useState(false);
 
   const fetchProviders = async () => {
     try {
       const { data } = await apiClient.get('/admin/providers');
       setProviders(data || []);
-      if (data && data.length > 0 && !selectedProvider) {
-        setSelectedProvider(data[0].id);
+      if (data && data.length > 0 && !importProvider) {
+        setImportProvider(data[0].id);
       }
     } catch (e) {
       toast({ title: "Failed to load providers", variant: "destructive" });
     }
   };
 
-  const fetchServices = async () => {
-    if (!selectedProvider) return;
-    setLoading(true);
-    setServices([]);
+  const fetchServices = async (currentPage = page) => {
+    if (currentPage === 1) setLoading(true);
     try {
-      const endpoint = viewMode === "active"
-        ? `/admin/providers/${selectedProvider}/active-services`
-        : `/admin/providers/${selectedProvider}/remote-services`;
-
-      const params = new URLSearchParams({ page: String(page), limit: "50" });
+      const params = new URLSearchParams({ page: String(currentPage), limit: "50" });
       if (platformFilter !== "all") params.set("platform", platformFilter);
       if (search) params.set("search", search);
 
-      const { data } = await apiClient.get(`${endpoint}?${params}`);
+      const { data } = await apiClient.get(`/admin/providers/all/active-services?${params}`);
       const servicesData = data?.data || data?.services || data;
-      setServices(Array.isArray(servicesData) ? servicesData : []);
+      const newServices = Array.isArray(servicesData) ? servicesData : [];
+      setServices(prev => currentPage === 1 ? newServices : [...prev, ...newServices]);
       setTotalPages(data?.totalPages || Math.ceil((data?.total || 1) / 50));
     } catch (e) {
-      toast({ title: "Failed to load services", variant: "destructive" });
+      toast({ title: "Failed to load active services", variant: "destructive" });
     }
-    setLoading(false);
+    if (currentPage === 1) setLoading(false);
   };
 
-  useEffect(() => { fetchProviders(); }, []);
-  useEffect(() => {
-    if (selectedProvider) {
-      setPage(1);
-      setSelected(new Set());
-      fetchServices();
+  const fetchRemoteServices = async () => {
+    if (!importProvider) return;
+    setRemoteLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(remotePage), limit: "50" });
+      if (remotePlatform !== "all") params.set("platform", remotePlatform);
+      if (remoteSearch) params.set("search", remoteSearch);
+
+      const { data } = await apiClient.get(`/admin/providers/${importProvider}/remote-services?${params}`);
+      const servicesData = data?.data || data?.services || data;
+      setRemoteServices(Array.isArray(servicesData) ? servicesData : []);
+      setRemoteTotalPages(data?.totalPages || Math.ceil((data?.total || 1) / 50));
+    } catch (e) {
+      toast({ title: "Failed to fetch remote catalog", variant: "destructive" });
     }
-  }, [selectedProvider, viewMode, platformFilter]);
+    setRemoteLoading(false);
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data } = await apiClient.get('/admin/providers/categories');
+      setCategories(data || []);
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => { 
+    fetchProviders(); 
+    fetchCategories();
+  }, []);
+  
+  useEffect(() => {
+    setPage(1);
+    setSelected(new Set());
+    fetchServices(1);
+  }, [platformFilter]);
 
   useEffect(() => {
-    if (selectedProvider) fetchServices();
+    if (page > 1) {
+      fetchServices(page);
+    }
   }, [page]);
+
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastElementRef = useCallback((node: HTMLTableRowElement | null) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && page < totalPages) {
+        setPage(prev => prev + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, page, totalPages]);
+
+  useEffect(() => {
+    if (importOpen && remoteServices.length > 0) {
+      setRemotePage(1);
+      setRemoteSelected(new Set());
+      fetchRemoteServices();
+    }
+  }, [remotePlatform, importProvider]);
+
+  useEffect(() => {
+    if (importOpen && remoteServices.length > 0) fetchRemoteServices();
+  }, [remotePage]);
 
   const handleSearch = () => {
     setPage(1);
     fetchServices();
   };
 
-  const toggleSelect = (id: number) => {
+  const handleRemoteSearch = () => {
+    setRemotePage(1);
+    fetchRemoteServices();
+  };
+
+  const getServiceKey = (providerId: string, serviceId: number) => `${providerId}-${serviceId}`;
+
+  const toggleSelect = (providerId: string, serviceId: number) => {
+    const key = getServiceKey(providerId, serviceId);
     setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
+
+  const toggleAll = async () => {
+    if (selected.size > 0 && selected.size >= filteredServices.length) {
+      setSelected(new Set());
+    } else {
+      toast({ title: "Selecting all services...", description: "Fetching all matching records." });
+      try {
+        const params = new URLSearchParams({ page: "1", limit: "10000" });
+        if (platformFilter !== "all") params.set("platform", platformFilter);
+        if (search) params.set("search", search);
+        const { data } = await apiClient.get(`/admin/providers/all/active-services?${params}`);
+        const servicesData = data?.data || data?.services || data;
+        const newSelected = new Set<string>();
+        if (Array.isArray(servicesData)) {
+          servicesData.forEach((s: any) => newSelected.add(getServiceKey(s.providerId || "", s.service)));
+        }
+        setSelected(newSelected);
+        toast({ title: `Selected all ${newSelected.size} services matching filter.` });
+      } catch (e) {
+        setSelected(new Set(filteredServices.map((s) => getServiceKey(s.providerId || "", s.service))));
+      }
+    }
+  };
+
+  const toggleRemoteSelect = (id: number) => {
+    setRemoteSelected((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   };
 
-  const toggleAll = () => {
-    if (selected.size === services.length) setSelected(new Set());
-    else setSelected(new Set(services.map((s) => s.service)));
+  const toggleRemoteAll = () => {
+    if (remoteSelected.size === filteredRemoteServices.length) setRemoteSelected(new Set());
+    else setRemoteSelected(new Set(filteredRemoteServices.map((s) => s.service)));
   };
 
-  const handleActivateBulk = async () => {
-    if (selected.size === 0) { toast({ title: "Select services first", variant: "destructive" }); return; }
+  const handleImportBulk = async () => {
+    if (remoteSelected.size === 0) return;
     setImporting(true);
     try {
-      const servicesToActivate = services
-        .filter((s) => selected.has(s.service))
+      const servicesToImport = remoteServices
+        .filter((s) => remoteSelected.has(s.service))
         .map((s) => ({
           serviceId: s.service,
           name: s.name,
@@ -145,42 +247,89 @@ const AdminServices = () => {
           rate: s.rate,
           min: s.min,
           max: s.max,
-          type: s.type,
-          customRate: importPrice ? parseFloat(importPrice) : undefined,
+          type: s.type
         }));
 
-      await apiClient.post(`/admin/providers/${selectedProvider}/services/activate-bulk`, servicesToActivate);
-      toast({ title: `Activated ${selected.size} services` });
-      setSelected(new Set());
+      await apiClient.post(`/admin/providers/${importProvider}/services/import-bulk`, servicesToImport);
+      toast({ title: `Imported ${remoteSelected.size} services successfully` });
+      setRemoteSelected(new Set());
       setImportOpen(false);
-      setImportPrice("");
-      if (viewMode === "active") fetchServices();
+      fetchServices();
     } catch (e: any) {
-      toast({ title: "Activation failed", description: e.message, variant: "destructive" });
+      toast({ title: "Import failed", description: e.message, variant: "destructive" });
     }
     setImporting(false);
   };
 
-  const handleDeactivate = async (serviceId: number) => {
+  const handleToggleStatus = async (providerId: string, serviceId: number, currentStatus: boolean) => {
     try {
-      await apiClient.delete(`/admin/providers/${selectedProvider}/services/${serviceId}/deactivate`);
-      toast({ title: "Service deactivated" });
+      await apiClient.post(`/admin/providers/${providerId}/services/${serviceId}/toggle`, { status: !currentStatus });
+      toast({ title: `Service ${!currentStatus ? "Activated" : "Hidden"}` });
       fetchServices();
     } catch (e) {
-      toast({ title: "Deactivation failed", variant: "destructive" });
+      toast({ title: "Failed to change status", variant: "destructive" });
     }
   };
 
-  const handleDeactivateBulk = async () => {
+  const handleBulkToggle = async (status: boolean) => {
     if (selected.size === 0) return;
     try {
-      const ids = Array.from(selected).map(id => ({ serviceId: id }));
-      await apiClient.post(`/admin/providers/${selectedProvider}/services/deactivate-bulk`, ids);
-      toast({ title: `Deactivated ${selected.size} services` });
+      const ids = Array.from(selected).map(key => {
+        const [pid, sid] = key.split('-');
+        return { providerId: pid, serviceId: Number(sid) };
+      });
+      await apiClient.post(`/admin/providers/services/toggle-bulk`, { services: ids, status });
+      toast({ title: `Bulk updated ${selected.size} services to ${status ? 'Active' : 'Hidden'}` });
       setSelected(new Set());
       fetchServices();
     } catch (e) {
-      toast({ title: "Bulk deactivation failed", variant: "destructive" });
+      toast({ title: "Bulk action failed", variant: "destructive" });
+    }
+  };
+
+  const [adjustPriceOpen, setAdjustPriceOpen] = useState(false);
+  const [adjustPercentage, setAdjustPercentage] = useState("");
+  const [adjusting, setAdjusting] = useState(false);
+
+  const handleAdjustPrice = async () => {
+    if (selected.size === 0 || !adjustPercentage) return;
+    const percentage = parseFloat(adjustPercentage);
+    if (isNaN(percentage)) {
+      toast({ title: "Invalid percentage", variant: "destructive" });
+      return;
+    }
+
+    setAdjusting(true);
+    try {
+      const ids = Array.from(selected).map(key => {
+        const [pid, sid] = key.split('-');
+        return { providerId: pid, serviceId: Number(sid) };
+      });
+      await apiClient.post(`/admin/providers/services/bulk-adjust-price`, { services: ids, percentage });
+      toast({ title: `Successfully updated prices for ${selected.size} services by ${percentage}%` });
+      setSelected(new Set());
+      setAdjustPriceOpen(false);
+      setAdjustPercentage("");
+      fetchServices();
+    } catch (e) {
+      toast({ title: "Failed to adjust prices", variant: "destructive" });
+    }
+    setAdjusting(false);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) return;
+    try {
+      const ids = Array.from(selected).map(key => {
+        const [pid, sid] = key.split('-');
+        return { providerId: pid, serviceId: Number(sid) };
+      });
+      await apiClient.post(`/admin/providers/services/delete-bulk`, { services: ids });
+      toast({ title: `Deleted ${selected.size} services permanently` });
+      setSelected(new Set());
+      fetchServices();
+    } catch (e) {
+      toast({ title: "Bulk delete failed", variant: "destructive" });
     }
   };
 
@@ -196,219 +345,326 @@ const AdminServices = () => {
     setSyncing(false);
   };
 
-  const platforms = useMemo(() => {
-    const cats = new Set(services.map((s) => extractPlatform(s.category)));
+  const platforms = useMemo(() => ["all", ...categories], [categories]);
+
+  const remotePlatforms = useMemo(() => {
+    const cats = new Set(remoteServices.map((s) => extractPlatform(s.category)));
     return ["all", ...Array.from(cats).sort()];
-  }, [services]);
+  }, [remoteServices]);
 
   const filteredServices = useMemo(() => {
     return services.filter(s => {
       if (platformFilter !== "all" && extractPlatform(s.category) !== platformFilter) return false;
-      if (search && !s.name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (query && !s.name.toLowerCase().includes(query.toLowerCase())) return false;
       return true;
     });
-  }, [services, platformFilter, search]);
+  }, [services, platformFilter, query]);
 
-  const selectedProviderObj = providers.find(p => p.id === selectedProvider);
+  const filteredRemoteServices = useMemo(() => {
+    return remoteServices.filter(s => {
+      if (remotePlatform !== "all" && extractPlatform(s.category) !== remotePlatform) return false;
+      if (remoteQuery && !s.name.toLowerCase().includes(remoteQuery.toLowerCase())) return false;
+      return true;
+    });
+  }, [remoteServices, remotePlatform, remoteQuery]);
+
+  const activeCount = services.filter(s => s.isActive).length;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Services Management</h2>
-          <p className="text-sm text-muted-foreground">Browse, activate, and manage SMM services per provider</p>
+          <h2 className="text-xl font-bold tracking-tight">Service Manager</h2>
+          <p className="text-sm text-muted-foreground">{services.length} services · {activeCount} active</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing} className="rounded-xl gap-2">
             <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
             {syncing ? "Syncing..." : "Sync All"}
           </Button>
+          <Button size="sm" onClick={() => setImportOpen(true)} className="rounded-xl gap-2">
+            <Download className="h-4 w-4" /> Import Services
+          </Button>
         </div>
       </div>
 
-      {/* Provider & Mode Selector */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="flex-1 min-w-[200px]">
-          <Label className="text-xs mb-1 block">Provider</Label>
-          <Select value={selectedProvider} onValueChange={setSelectedProvider}>
-            <SelectTrigger className="rounded-xl bg-card border-border">
-              <SelectValue placeholder="Select provider..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Providers</SelectItem>
-              {providers.map(p => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label className="text-xs mb-1 block">View</Label>
-          <div className="flex rounded-xl border border-border overflow-hidden">
-            <button
-              className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === "active" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-secondary"}`}
-              onClick={() => setViewMode("active")}
-            >
-              <Package className="h-4 w-4 inline mr-1.5" />Active
-            </button>
-            <button
-              className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === "remote" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-secondary"}`}
-              onClick={() => setViewMode("remote")}
-            >
-              <Download className="h-4 w-4 inline mr-1.5" />Remote
-            </button>
-          </div>
-        </div>
-        <div>
-          <Label className="text-xs mb-1 block">Platform</Label>
-          <Select value={platformFilter} onValueChange={setPlatformFilter}>
-            <SelectTrigger className="rounded-xl bg-card border-border w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {platforms.map(p => <SelectItem key={p} value={p}>{p === "all" ? "All Platforms" : p}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Search & Bulk Actions */}
-      <div className="flex flex-wrap gap-2 items-center">
+      {/* Main Filter & Search Toolbar */}
+      <div className="flex flex-wrap gap-3 items-center bg-card p-3 rounded-2xl border border-border">
         <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search services..."
-            className="pl-9 rounded-xl bg-card border-border"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          <Input 
+            placeholder="Search by name or service ID..." 
+            className="pl-9 h-10 bg-transparent border-0 ring-0 focus-visible:ring-0 shadow-none" 
+            value={search} 
+            onChange={(e) => {
+              setSearch(e.target.value);
+              startTransition(() => setQuery(e.target.value));
+            }} 
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
           />
         </div>
-        <Button variant="outline" size="sm" onClick={handleSearch} className="rounded-xl">Search</Button>
+        <div className="h-6 w-px bg-border hidden sm:block mx-2"></div>        <Select value={platformFilter} onValueChange={setPlatformFilter}>
+          <SelectTrigger className="w-fit min-w-[160px] h-10 border-0 bg-transparent shadow-none hover:bg-secondary/50 rounded-xl">
+            <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px] overflow-y-auto min-w-[200px]">
+            {platforms.map(p => (
+              <SelectItem 
+                key={p} 
+                value={p}
+                className={platformFilter === p ? "bg-[#00A99D] text-white focus:bg-[#00A99D]/90 focus:text-white" : ""}
+              >
+                {p === "all" ? "All Categories" : p}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         {selected.size > 0 && (
           <>
-            <span className="text-sm text-muted-foreground">{selected.size} selected</span>
-            {viewMode === "remote" && (
-              <Button size="sm" onClick={() => setImportOpen(true)} className="rounded-xl gap-1.5">
-                <Check className="h-3.5 w-3.5" /> Activate Selected
-              </Button>
-            )}
-            {viewMode === "active" && (
-              <Button size="sm" variant="destructive" onClick={handleDeactivateBulk} className="rounded-xl gap-1.5">
-                <X className="h-3.5 w-3.5" /> Deactivate Selected
-              </Button>
-            )}
+            <div className="h-6 w-px bg-border hidden sm:block mx-2"></div>
+            <Select value="" onValueChange={(val) => {
+              if (val === 'enable') handleBulkToggle(true);
+              else if (val === 'disable') handleBulkToggle(false);
+              else if (val === 'delete') handleBulkDelete();
+              else if (val === 'adjust') setAdjustPriceOpen(true);
+            }}>
+              <SelectTrigger className="w-fit gap-2 h-10 border-0 bg-secondary/80 shadow-none hover:bg-secondary rounded-xl font-semibold text-sm">
+                <SelectValue placeholder={`Bulk (${selected.size})`} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="adjust">💰 Adjust Prices</SelectItem>
+                <SelectItem value="enable">👁️ Enable</SelectItem>
+                <SelectItem value="disable">🚫 Disable</SelectItem>
+                <SelectItem value="delete" className="text-destructive focus:bg-destructive/10 focus:text-destructive">🗑️ Delete</SelectItem>
+              </SelectContent>
+            </Select>
           </>
         )}
       </div>
 
-      {/* Services Table */}
-      {!selectedProvider ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center">
-          <Package className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground text-sm">Select a provider to view services</p>
-        </div>
-      ) : loading ? (
+      {/* Main Services Table */}
+      {loading || isPending ? (
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border bg-card overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-10">
+              <TableRow className="hover:bg-transparent border-b border-border bg-secondary/20">
+                <TableHead className="w-12 text-center">
                   <Checkbox checked={selected.size === filteredServices.length && filteredServices.length > 0} onCheckedChange={toggleAll} />
                 </TableHead>
-                <TableHead className="text-xs">ID</TableHead>
-                <TableHead className="text-xs">Name</TableHead>
-                <TableHead className="text-xs">Category</TableHead>
-                <TableHead className="text-xs">Provider</TableHead>
-                <TableHead className="text-xs">Rate</TableHead>
-                <TableHead className="text-xs">Min/Max</TableHead>
-                {viewMode === "active" && <TableHead className="text-xs text-right">Actions</TableHead>}
+                <TableHead className="text-xs font-medium">ID</TableHead>
+                <TableHead className="text-xs font-medium">Service</TableHead>
+                <TableHead className="text-xs font-medium">Category</TableHead>
+                <TableHead className="text-xs font-medium">Provider Cost</TableHead>
+                <TableHead className="text-xs font-medium">My Price</TableHead>
+                <TableHead className="text-xs font-medium">Provider</TableHead>
+                <TableHead className="text-xs font-medium text-right">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <AnimatePresence>
-                {filteredServices.map((s) => (
-                  <motion.tr key={s.service} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="border-b border-border">
+                {filteredServices.map((s, i) => (
+                  <motion.tr 
+                    ref={i === filteredServices.length - 1 ? lastElementRef : null}
+                    key={getServiceKey(s.providerId || "", s.service)} 
+                    layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="border-b border-border/50 hover:bg-secondary/20 transition-colors">
+                    <TableCell className="text-center">
+                      <Checkbox checked={selected.has(getServiceKey(s.providerId || "", s.service))} onCheckedChange={() => toggleSelect(s.providerId || "", s.service)} />
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{s.service}</TableCell>
+                    <TableCell className="text-sm font-medium max-w-[300px] truncate">
+                      {s.name}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
+                      {s.category}
+                    </TableCell>
+                    <TableCell className="text-xs font-mono text-muted-foreground">${Number(s.rate).toFixed(4)}</TableCell>
+                    <TableCell className="text-xs font-mono font-medium text-emerald-500">${Number(s.customRate || s.rate).toFixed(4)}</TableCell>
                     <TableCell>
-                      <Checkbox checked={selected.has(s.service)} onCheckedChange={() => toggleSelect(s.service)} />
+                      <Select value={s.providerId || ""} onValueChange={(val) => toast({title: "Coming soon", description: "Provider reassignment is not fully implemented yet."})}>
+                        <SelectTrigger className="h-7 w-fit text-[11px] font-medium bg-secondary/80 border-0 rounded-full shadow-none gap-1.5 hover:bg-secondary">
+                          <SelectValue placeholder="Unknown" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {providers.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
-                    <TableCell className="text-xs font-mono text-muted-foreground">{s.service}</TableCell>
-                    <TableCell className="text-sm max-w-[240px]">
-                      <div className="truncate font-medium">{s.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{s.type}</div>
+                    <TableCell className="text-right">
+                      <button 
+                        onClick={() => handleToggleStatus(s.providerId || "", s.service, s.isActive || false)}
+                        className={`text-xs px-3.5 py-1.5 rounded-full font-semibold transition-colors ${!s.isActive ? "bg-[#015C4B] text-white shadow-sm hover:bg-[#015C4B]/90" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                      >
+                        {!s.isActive ? "Active" : "Hidden"}
+                      </button>
                     </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-[10px] font-normal">{extractPlatform(s.category)}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="text-[10px] font-normal text-muted-foreground whitespace-nowrap">
-                        {providers.find(p => p.id === s.providerId)?.name || selectedProviderObj?.name || 'Unknown'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs font-mono text-primary">${Number(s.rate).toFixed(4)}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{s.min} – {s.max}</TableCell>
-                    {viewMode === "active" && (
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="h-7 text-xs rounded-lg text-destructive hover:text-destructive" onClick={() => handleDeactivate(s.service)}>
-                          <X className="h-3.5 w-3.5 mr-1" /> Deactivate
-                        </Button>
-                      </TableCell>
-                    )}
                   </motion.tr>
                 ))}
               </AnimatePresence>
               {filteredServices.length === 0 && (
                 <tr>
-                  <td colSpan={viewMode === "active" ? 7 : 6} className="text-center py-16 text-muted-foreground text-sm">
-                    No services found.
+                  <td colSpan={8} className="text-center py-16 text-muted-foreground text-sm">
+                    No services found. Click "Import Services" to add some.
                   </td>
                 </tr>
               )}
             </TableBody>
           </Table>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between p-4 border-t border-border">
-              <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="rounded-lg" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
-                <Button variant="outline" size="sm" className="rounded-lg" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next</Button>
-              </div>
+          
+          {page < totalPages && (
+            <div className="flex justify-center p-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           )}
         </motion.div>
       )}
 
-      {/* Activate Dialog */}
+      {/* Import Modal */}
       <Dialog open={importOpen} onOpenChange={setImportOpen}>
-        <DialogContent className="sm:max-w-sm max-w-[calc(100vw-2rem)] bg-card border-border rounded-2xl">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col bg-card border-border rounded-2xl p-0 overflow-hidden">
+          <div className="p-6 pb-4 border-b border-border">
+            <DialogHeader>
+              <DialogTitle>Import Services from Provider</DialogTitle>
+              <DialogDescription>Select a provider, fetch their catalog, then search and pick services to import</DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-3 mt-4">
+              <div className="flex-1">
+                <Select value={importProvider} onValueChange={(val) => { setImportProvider(val); setRemoteServices([]); }}>
+                  <SelectTrigger className="rounded-xl h-11 bg-secondary/50 border-border">
+                    <SelectValue placeholder="Select provider..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {providers.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={() => { setRemotePage(1); fetchRemoteServices(); }} className="rounded-xl h-11 px-6 gap-2" disabled={!importProvider || remoteLoading}>
+                {remoteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                Fetch
+              </Button>
+            </div>
+          </div>
+
+          {remoteServices.length > 0 && (
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex items-center gap-3 p-4 border-b border-border bg-secondary/20">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search by name, ID, or category..." 
+                    className="pl-9 h-10 bg-card border-border rounded-xl" 
+                    value={remoteSearch} 
+                    onChange={(e) => {
+                      setRemoteSearch(e.target.value);
+                      startTransition(() => setRemoteQuery(e.target.value));
+                    }} 
+                    onKeyDown={(e) => e.key === "Enter" && handleRemoteSearch()} 
+                  />
+                </div>
+                <Select value={remotePlatform} onValueChange={setRemotePlatform}>
+                  <SelectTrigger className="w-[180px] h-10 rounded-xl bg-card border-border">
+                    <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="All Platforms" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {remotePlatforms.map(p => <SelectItem key={p} value={p}>{p === "all" ? "All Platforms" : p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-secondary/10">
+                {remoteServices.length} services found · {remoteSelected.size} selected
+              </div>
+
+              <div className="flex-1 overflow-auto max-h-[40vh]">
+                {remoteLoading ? (
+                  <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+                ) : (
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
+                      <TableRow className="hover:bg-transparent border-border">
+                        <TableHead className="w-12 text-center">
+                          <Checkbox checked={remoteSelected.size === filteredRemoteServices.length && filteredRemoteServices.length > 0} onCheckedChange={toggleRemoteAll} />
+                        </TableHead>
+                        <TableHead className="text-xs font-medium">ID</TableHead>
+                        <TableHead className="text-xs font-medium w-[40%]">Name</TableHead>
+                        <TableHead className="text-xs font-medium">Category</TableHead>
+                        <TableHead className="text-xs font-medium">Platform</TableHead>
+                        <TableHead className="text-xs font-medium">Rate</TableHead>
+                        <TableHead className="text-xs font-medium">Min/Max</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredRemoteServices.map((s) => (
+                        <TableRow key={s.service} className="border-b border-border/50 hover:bg-secondary/20">
+                          <TableCell className="text-center">
+                            <Checkbox checked={remoteSelected.has(s.service)} onCheckedChange={() => toggleRemoteSelect(s.service)} />
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{s.service}</TableCell>
+                          <TableCell className="text-sm font-medium">
+                            <div className="line-clamp-2">{s.name}</div>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            <div className="line-clamp-1">{s.category}</div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[10px] font-normal">{extractPlatform(s.category)}</Badge>
+                          </TableCell>
+                          <TableCell className="text-xs font-mono text-muted-foreground">${Number(s.rate).toFixed(4)}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{s.min}/{s.max}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+
+              <div className="p-4 border-t border-border bg-card flex items-center justify-between">
+                <div className="flex gap-2 items-center">
+                  <span className="text-xs text-muted-foreground mr-2">Page {remotePage} of {remoteTotalPages}</span>
+                  <Button variant="outline" size="sm" className="rounded-lg h-8" disabled={remotePage <= 1} onClick={() => setRemotePage(p => p - 1)}>Prev</Button>
+                  <Button variant="outline" size="sm" className="rounded-lg h-8" disabled={remotePage >= remoteTotalPages} onClick={() => setRemotePage(p => p + 1)}>Next</Button>
+                </div>
+                <Button className="rounded-xl px-8" onClick={handleImportBulk} disabled={importing || remoteSelected.size === 0}>
+                  {importing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Import {remoteSelected.size} Services
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      <Dialog open={adjustPriceOpen} onOpenChange={setAdjustPriceOpen}>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Activate {selected.size} Services</DialogTitle>
-            <DialogDescription>Optionally set a custom price override. Leave blank to use the provider rate.</DialogDescription>
+            <DialogTitle>Adjust Prices ({selected.size} services)</DialogTitle>
+            <DialogDescription>
+              Enter a percentage to increase the prices. For example, '20' will increase prices by 20%. Use a negative number to decrease.
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Custom Price per 1000 (USD, optional)</Label>
-              <Input
-                className="mt-1 rounded-xl bg-secondary border-border"
-                placeholder="e.g. 1.50"
-                value={importPrice}
-                onChange={(e) => setImportPrice(e.target.value)}
-                type="number"
-                step="0.01"
+          <div className="py-4 flex flex-col gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Percentage Adjustment (%)</label>
+              <Input 
+                type="number" 
+                placeholder="e.g. 15" 
+                value={adjustPercentage} 
+                onChange={e => setAdjustPercentage(e.target.value)} 
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" className="rounded-xl" onClick={() => setImportOpen(false)}>Cancel</Button>
-            <Button className="rounded-xl" onClick={handleActivateBulk} disabled={importing}>
-              {importing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Activate
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setAdjustPriceOpen(false)}>Cancel</Button>
+            <Button onClick={handleAdjustPrice} disabled={adjusting || !adjustPercentage}>
+              {adjusting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Apply Adjustment
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

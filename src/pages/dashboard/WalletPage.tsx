@@ -39,7 +39,7 @@ const WalletPage = () => {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [dbTransactions, setDbTransactions] = useState<any[]>([]);
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(null);
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("manual");
   const [isFirstDeposit, setIsFirstDeposit] = useState(true);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -234,48 +234,9 @@ const WalletPage = () => {
         </div>
       </div>
 
-      {/* Step 1: Method Selection */}
-      {!selectedMethod && (
-        <div className="mb-6 animate-fade-in [animation-delay:150ms]">
-          <h2 className="text-base font-bold mb-4">Choose Payment Method</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Manual Option */}
-            <div
-              className="group rounded-2xl border-2 border-border bg-card p-5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:border-primary/50 hover:-translate-y-1 hover:shadow-[0_12px_40px_-12px_hsl(var(--primary)/0.2)] cursor-pointer"
-              onClick={() => setSelectedMethod("manual")}
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="h-12 w-12 rounded-xl bg-[hsl(var(--fame-orange))]/10 flex items-center justify-center text-[hsl(var(--fame-orange))] text-xl font-bold transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"><DollarSign className="h-6 w-6" /></div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">Manual Transfer</h3>
-                  <p className="text-xs text-muted-foreground">Local payment gateways</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-                <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> Secure</span>
-                <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Easy tracking</span>
-              </div>
-              <div className="rounded-lg bg-primary/10 text-primary text-xs font-semibold text-center py-1.5 mb-3 transition-all duration-300 group-hover:bg-primary/15">
-                {isFirstDeposit ? "10% Bonus on 1st Deposit" : "No Bonus"}
-              </div>
-              <Button className="w-full h-11 transition-all duration-200 group-hover:shadow-md">
-                Select Transfer <ArrowRight className="h-4 w-4 ml-1 transition-transform duration-200 group-hover:translate-x-0.5" />
-              </Button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
       {/* Step 2: Manual Form */}
       {selectedMethod === "manual" && (
         <div className="mb-6 animate-fade-in">
-          <button
-            onClick={() => setSelectedMethod(null)}
-            className="group flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-all duration-200 mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" /> Back to methods
-          </button>
           <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 transition-all duration-300 hover:shadow-[0_4px_20px_-6px_hsl(var(--foreground)/0.08)]">
             <div className="flex items-center gap-3 mb-5">
               <div className="h-10 w-10 rounded-xl bg-[hsl(var(--fame-orange))]/10 flex items-center justify-center text-lg transition-transform duration-300 hover:scale-110 hover:rotate-6"><DollarSign className="h-5 w-5" /></div>
@@ -323,18 +284,17 @@ const WalletPage = () => {
                 </div>
               )}
 
-              <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
-                <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> Secure</span>
-                <span className="flex items-center gap-1"><Zap className="h-3 w-3" /> Instant</span>
-                <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Local Gateway</span>
+              <div className="flex items-center justify-end text-xs text-muted-foreground pt-1 mb-2">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> Secure</span>
+                  <span className="flex items-center gap-1"><Zap className="h-3 w-3" /> Instant</span>
+                  <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Local Gateway</span>
+                </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Button variant="outline" className="border-border h-12 flex-1 transition-all duration-200 hover:shadow-sm active:scale-[0.97]" onClick={() => setSelectedMethod(null)}>Cancel</Button>
-                <Button onClick={handleCreate} disabled={creating} className="h-12 flex-1 transition-all duration-200 hover:shadow-lg hover:-translate-y-px active:scale-[0.97]">
-                  {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Proceed to Pay
-                </Button>
-              </div>
+              <Button onClick={handleCreate} disabled={creating} className="w-full h-12 transition-all duration-200 hover:shadow-lg hover:-translate-y-px active:scale-[0.97]">
+                {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Proceed to Pay
+              </Button>
             </div>
           </div>
         </div>

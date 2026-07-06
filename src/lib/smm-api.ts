@@ -13,6 +13,7 @@ export interface SmmService {
   refill: boolean;
   dripfeed: boolean;
   recommended: boolean;
+  average_time?: string | number;
 }
 
 import { apiClient } from "./apiClient";
@@ -45,6 +46,7 @@ async function fetchServices(): Promise<SmmService[]> {
       refill: s.refill || false,
       dripfeed: s.dripfeed || false,
       recommended: s.recommended || false,
+      average_time: s.average_time,
     };
   });
 }

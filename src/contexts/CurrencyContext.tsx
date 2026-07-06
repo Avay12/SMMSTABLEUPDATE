@@ -44,7 +44,12 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
     try {
       const { data } = await apiClient.get('/admin/currencies');
       if (Array.isArray(data) && data.length > 0) {
-        setCurrencies(data);
+        const sortedData = [...data].sort((a, b) => {
+          if (a.code === 'NPR') return -1;
+          if (b.code === 'NPR') return 1;
+          return 0;
+        });
+        setCurrencies(sortedData);
       }
     } catch (error) {
       console.error('Failed to fetch currencies:', error);

@@ -30,7 +30,7 @@ const ApiPage = () => {
   const [generating, setGenerating] = useState(false);
 
   const maskedKey = apiKey ? `fs_${"*".repeat(Math.max(0, apiKey.length - 3))}` : "";
-  const API_URL = "https://smmstable.com/api/v2";
+  const API_URL = "https://smmstable.com/api";
 
   // Load existing API key from database
   useEffect(() => {

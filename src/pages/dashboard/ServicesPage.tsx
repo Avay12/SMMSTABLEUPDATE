@@ -22,6 +22,16 @@ const platformLogos: Record<string, string> = {
   Kick: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/kick.svg",
 };
 
+const formatAvgTime = (mins?: string | number) => {
+  if (!mins) return "";
+  const num = parseInt(mins.toString(), 10);
+  if (isNaN(num) || num <= 0) return "";
+  if (num < 60) return `${num} min${num !== 1 ? 's' : ''}`;
+  const hours = Math.floor(num / 60);
+  const m = num % 60;
+  return `${hours} hr${hours !== 1 ? 's' : ''}${m > 0 ? ` ${m} min` : ''}`;
+};
+
 const ServicesPage = () => {
   const { data: services, isLoading, error, refetch } = useServices();
   const { formatCurrency } = useCurrency();
@@ -148,12 +158,13 @@ const ServicesPage = () => {
           {/* Mobile: compact cards. Desktop: table rows */}
           <div className="space-y-2 sm:space-y-0">
             {/* Desktop header */}
-            <div className="hidden sm:grid grid-cols-[60px_1fr_90px_70px_90px_80px] gap-3 px-4 py-2.5 text-xs text-muted-foreground font-medium border-b border-border bg-card rounded-t-xl">
+            <div className="hidden sm:grid grid-cols-[60px_1fr_90px_70px_90px_100px_80px] gap-3 px-4 py-2.5 text-xs text-muted-foreground font-medium border-b border-border bg-card rounded-t-xl">
               <span>ID</span>
               <span>Service</span>
               <span>Rate/1K</span>
               <span>Min</span>
               <span>Max</span>
+              <span>Avg Time</span>
               <span></span>
             </div>
 
@@ -169,10 +180,11 @@ const ServicesPage = () => {
                       </div>
                       <span className="text-[10px] bg-muted rounded px-1.5 py-0.5 font-mono shrink-0">{s.service}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs mb-2.5">
+                    <div className="flex items-center gap-3 text-xs mb-2.5 flex-wrap">
                       <span className="text-primary font-semibold">{formatCurrency(parseFloat(s.rate))}/1K</span>
                       <span className="text-muted-foreground">Min {s.min.toLocaleString()}</span>
                       <span className="text-muted-foreground">Max {s.max.toLocaleString()}</span>
+                      {s.average_time && <span className="text-muted-foreground text-[10px] bg-secondary/50 px-1.5 py-0.5 rounded">Avg: {formatAvgTime(s.average_time)}</span>}
                     </div>
                     <Button
                       size="sm"
@@ -183,7 +195,7 @@ const ServicesPage = () => {
                     </Button>
                   </div>
                   {/* Desktop row */}
-                  <div className={`hidden sm:grid grid-cols-[60px_1fr_90px_70px_90px_80px] gap-3 px-4 py-3 text-sm border-b border-border/50 hover:bg-secondary/50 transition-colors items-center ${s.recommended ? 'bg-primary/5' : ''}`}>
+                  <div className={`hidden sm:grid grid-cols-[60px_1fr_90px_70px_90px_100px_80px] gap-3 px-4 py-3 text-sm border-b border-border/50 hover:bg-secondary/50 transition-colors items-center ${s.recommended ? 'bg-primary/5' : ''}`}>
                     <span className="text-muted-foreground font-mono text-xs">{s.service}</span>
                     <span className="font-medium truncate flex items-center gap-1.5">
                       {s.recommended && <Star className="h-3.5 w-3.5 text-primary fill-primary shrink-0" />}
@@ -192,6 +204,7 @@ const ServicesPage = () => {
                     <span className="text-primary font-medium">{formatCurrency(parseFloat(s.rate))}</span>
                     <span className="text-muted-foreground text-xs">{s.min.toLocaleString()}</span>
                     <span className="text-muted-foreground text-xs">{s.max.toLocaleString()}</span>
+                    <span className="text-muted-foreground text-[10px] bg-secondary/50 px-1.5 py-0.5 rounded truncate">{s.average_time ? formatAvgTime(s.average_time) : '-'}</span>
                     <Button
                       size="sm"
                       className="h-8 rounded-lg text-xs gap-1 active:scale-[0.97]"
