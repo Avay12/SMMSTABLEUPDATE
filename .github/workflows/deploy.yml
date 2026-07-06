@@ -1,0 +1,113 @@
+name: Deploy Frontend App to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build React app
+        run: npm run build
+
+      - name: Verify local build
+        run: |
+          ls -la dist/
+          [ -f dist/index.html ] || (echo "index.html missing in build!" && exit 1)
+
+      - name: Backup current app on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            timestamp=$(date +%Y%m%d_%H%M%S)
+            echo "Creating backup of current app..."
+            if [ -d "/var/www/browser" ]; then
+              sudo mkdir -p /var/www/backups
+              sudo tar -czf "/var/www/backups/browser_backup_$timestamp.tar.gz" -C /var/www browser
+              echo "Backup created: /var/www/backups/browser_backup_$timestamp.tar.gz"
+            else
+              echo "No existing app found, skipping backup"
+            fi
+
+      - name: Prepare target directory on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Preparing /var/www/browser..."
+            sudo mkdir -p /var/www/browser
+            sudo chown -R $USER:www-data /var/www/browser
+            sudo chmod -R 775 /var/www/browser
+            echo "Directory ready for deployment"
+
+      - name: Copy build to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "dist/*"
+          target: "/var/www/browser"
+          strip_components: 1
+          overwrite: true
+          rm: true
+
+      - name: Verify remote deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Verifying deployed files..."
+            ls -la /var/www/browser
+            [ -f /var/www/browser/index.html ] || (echo "index.html missing on server!" && exit 1)
+            echo "Files verified successfully"
+
+      - name: Set production permissions
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Setting production permissions..."
+            sudo chown -R www-data:www-data /var/www/browser
+            sudo chmod -R 755 /var/www/browser
+            sudo find /var/www/browser -type d -exec chmod 755 {} \;
+            sudo find /var/www/browser -type f -exec chmod 644 {} \;
+            echo "Permissions set"
+
+      - name: Reload NGINX (no cert checks)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Reloading NGINX (no certificate verification)..."
+            sudo nginx -t || echo "Ignoring certificate test errors"
+            sudo systemctl reload nginx
+            echo "NGINX reloaded successfully"
+

@@ -4,14 +4,14 @@ import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const platforms = [
-  { name: "Instagram", svg: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" },
-  { name: "TikTok", svg: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" },
-  { name: "YouTube", svg: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" },
-  { name: "Facebook", svg: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" },
-  { name: "X", svg: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/x.svg" },
-  { name: "Telegram", svg: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/telegram.svg" },
-  { name: "Spotify", svg: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/spotify.svg" },
-  { name: "Twitch", svg: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/twitch.svg" },
+  { name: "Instagram", svg: "https://cdn.simpleicons.org/instagram" },
+  { name: "TikTok", svg: "https://cdn.simpleicons.org/tiktok" },
+  { name: "YouTube", svg: "https://cdn.simpleicons.org/youtube" },
+  { name: "Facebook", svg: "https://cdn.simpleicons.org/facebook" },
+  { name: "X", svg: "https://cdn.simpleicons.org/x" },
+  { name: "Telegram", svg: "https://cdn.simpleicons.org/telegram" },
+  { name: "Spotify", svg: "https://cdn.simpleicons.org/spotify" },
+  { name: "Twitch", svg: "https://cdn.simpleicons.org/twitch" },
 ];
 
 const HeroSection = () => {

@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Check } from "lucide-react";
+import { Menu, X, Check, Sun, Moon } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import logo from "@/assets/logo.png";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useTheme } from "next-themes";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -11,6 +12,7 @@ const Navbar = () => {
   const { currencies, currentCurrency, setCurrency } = useCurrency();
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const currencyRef = useRef<HTMLDivElement>(null);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -80,6 +82,13 @@ const Navbar = () => {
             )}
           </div>
 
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+
           <Link to="/auth?mode=login">
             <Button variant="ghost" size="sm" className="text-muted-foreground">Sign In</Button>
           </Link>
@@ -88,9 +97,17 @@ const Navbar = () => {
           </Link>
         </div>
 
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 -mr-2 text-foreground active:scale-[0.92] transition-transform" aria-label="Toggle menu">
-          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <div className="flex items-center gap-1 md:hidden">
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="p-2 text-foreground active:scale-[0.92] transition-transform"
+          >
+            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 -mr-2 text-foreground active:scale-[0.92] transition-transform" aria-label="Toggle menu">
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Full-screen mobile overlay */}
