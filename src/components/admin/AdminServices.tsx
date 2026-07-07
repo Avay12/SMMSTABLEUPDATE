@@ -56,7 +56,7 @@ const AdminServices = () => {
   // Main View State (Active/Imported Services)
   const [services, setServices] = useState<RemoteService[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isPending, startTransition] = useTransition();
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState("all");
@@ -71,6 +71,7 @@ const AdminServices = () => {
   const [importProvider, setImportProvider] = useState("");
   const [remoteServices, setRemoteServices] = useState<RemoteService[]>([]);
   const [remoteLoading, setRemoteLoading] = useState(false);
+  const [remoteSearchInput, setRemoteSearchInput] = useState("");
   const [remoteSearch, setRemoteSearch] = useState("");
   const [remoteQuery, setRemoteQuery] = useState("");
   const [remotePlatform, setRemotePlatform] = useState("all");
@@ -140,6 +141,22 @@ const AdminServices = () => {
     fetchProviders(); 
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearch(searchInput);
+      setQuery(searchInput);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchInput]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setRemoteSearch(remoteSearchInput);
+      setRemoteQuery(remoteSearchInput);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [remoteSearchInput]);
   
   useEffect(() => {
     setPage(1);
@@ -166,12 +183,20 @@ const AdminServices = () => {
   }, [loading, page, totalPages]);
 
   useEffect(() => {
+    if (importOpen) {
+      setRemotePage(1);
+      setRemoteSelected(new Set());
+      fetchRemoteServices();
+    }
+  }, [importOpen, importProvider]);
+
+  useEffect(() => {
     if (importOpen && remoteServices.length > 0) {
       setRemotePage(1);
       setRemoteSelected(new Set());
       fetchRemoteServices();
     }
-  }, [remotePlatform, importProvider]);
+  }, [remotePlatform]);
 
   useEffect(() => {
     if (importOpen && remoteServices.length > 0) fetchRemoteServices();
@@ -252,9 +277,12 @@ const AdminServices = () => {
 
       await apiClient.post(`/admin/providers/${importProvider}/services/import-bulk`, servicesToImport);
       toast({ title: `Imported ${remoteSelected.size} services successfully` });
+      
+      // Instantly remove imported services from the local state
+      setRemoteServices(prev => prev.filter(s => !remoteSelected.has(s.service)));
       setRemoteSelected(new Set());
       setImportOpen(false);
-      fetchServices();
+      fetchServices(1);
     } catch (e: any) {
       toast({ title: "Import failed", description: e.message, variant: "destructive" });
     }
@@ -355,7 +383,7 @@ const AdminServices = () => {
   const filteredServices = useMemo(() => {
     return services.filter(s => {
       if (platformFilter !== "all" && extractPlatform(s.category) !== platformFilter) return false;
-      if (query && !s.name.toLowerCase().includes(query.toLowerCase())) return false;
+      if (query && !s.name.toLowerCase().includes(query.toLowerCase()) && !String(s.service).includes(query) && !s.category.toLowerCase().includes(query.toLowerCase())) return false;
       return true;
     });
   }, [services, platformFilter, query]);
@@ -363,7 +391,7 @@ const AdminServices = () => {
   const filteredRemoteServices = useMemo(() => {
     return remoteServices.filter(s => {
       if (remotePlatform !== "all" && extractPlatform(s.category) !== remotePlatform) return false;
-      if (remoteQuery && !s.name.toLowerCase().includes(remoteQuery.toLowerCase())) return false;
+      if (remoteQuery && !s.name.toLowerCase().includes(remoteQuery.toLowerCase()) && !String(s.service).includes(remoteQuery) && !s.category.toLowerCase().includes(remoteQuery.toLowerCase())) return false;
       return true;
     });
   }, [remoteServices, remotePlatform, remoteQuery]);
@@ -395,11 +423,8 @@ const AdminServices = () => {
           <Input 
             placeholder="Search by name or service ID..." 
             className="pl-9 h-10 bg-transparent border-0 ring-0 focus-visible:ring-0 shadow-none" 
-            value={search} 
-            onChange={(e) => {
-              setSearch(e.target.value);
-              startTransition(() => setQuery(e.target.value));
-            }} 
+            value={searchInput} 
+            onChange={(e) => setSearchInput(e.target.value)} 
             onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
           />
         </div>
@@ -445,7 +470,7 @@ const AdminServices = () => {
       </div>
 
       {/* Main Services Table */}
-      {loading || isPending ? (
+      {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -465,12 +490,11 @@ const AdminServices = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <AnimatePresence>
                 {filteredServices.map((s, i) => (
-                  <motion.tr 
+                  <TableRow 
                     ref={i === filteredServices.length - 1 ? lastElementRef : null}
                     key={getServiceKey(s.providerId || "", s.service)} 
-                    layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="border-b border-border/50 hover:bg-secondary/20 transition-colors">
+                    className="border-b border-border/50 hover:bg-secondary/20 transition-colors">
                     <TableCell className="text-center">
                       <Checkbox checked={selected.has(getServiceKey(s.providerId || "", s.service))} onCheckedChange={() => toggleSelect(s.providerId || "", s.service)} />
                     </TableCell>
@@ -501,9 +525,8 @@ const AdminServices = () => {
                         {!s.isActive ? "Active" : "Hidden"}
                       </button>
                     </TableCell>
-                  </motion.tr>
+                  </TableRow>
                 ))}
-              </AnimatePresence>
               {filteredServices.length === 0 && (
                 <tr>
                   <td colSpan={8} className="text-center py-16 text-muted-foreground text-sm">
@@ -558,11 +581,8 @@ const AdminServices = () => {
                   <Input 
                     placeholder="Search by name, ID, or category..." 
                     className="pl-9 h-10 bg-card border-border rounded-xl" 
-                    value={remoteSearch} 
-                    onChange={(e) => {
-                      setRemoteSearch(e.target.value);
-                      startTransition(() => setRemoteQuery(e.target.value));
-                    }} 
+                    value={remoteSearchInput} 
+                    onChange={(e) => setRemoteSearchInput(e.target.value)} 
                     onKeyDown={(e) => e.key === "Enter" && handleRemoteSearch()} 
                   />
                 </div>

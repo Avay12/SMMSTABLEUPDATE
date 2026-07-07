@@ -27,8 +27,8 @@ async function fetchServices(): Promise<SmmService[]> {
   ]);
 
   const data = servicesRes.data?.data || servicesRes.data;
-  const marginPercent = Number(marginRes.data?.value || 0); // e.g. 20 = 20%
-  const marginMultiplier = 1 + marginPercent / 100;
+  const marginValue = Number(marginRes.data?.value || 1); // e.g. 1.5 = 1.5x markup
+  const marginMultiplier = marginValue > 0 ? marginValue : 1;
 
   // Map DB format to SmmService interface, applying margin to rate
   return (data || []).map((s: any) => {

@@ -20,14 +20,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      if (socket) {
-        socket.disconnect();
-        setSocket(null);
-        setConnected(false);
-      }
-      return;
-    }
+    // Removed early exit so anonymous users can receive global broadcasts like marginUpdate
 
     const socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     const newSocket = io(socketUrl, {
@@ -37,7 +30,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     newSocket.on('connect', () => {
       setConnected(true);
-      newSocket.emit('joinUserRoom', user.id);
+      if (user) {
+        newSocket.emit('joinUserRoom', user.id);
+      }
     });
 
     newSocket.on('disconnect', () => {
@@ -85,6 +80,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
       // Re-fetch orders
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+    });
+
+    newSocket.on('marginUpdate', (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['smm-services'] });
     });
 
     setSocket(newSocket);
