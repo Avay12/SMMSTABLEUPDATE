@@ -93,7 +93,7 @@ const OrderTracker = ({ order, expanded, onToggle }: { order: any; expanded: boo
                 )}
                 {order.status}
               </Badge>
-              <span className="text-[11px] text-muted-foreground">{timeSince(order.updatedAt || order.createdAt)}</span>
+              <span className="text-[11px] text-muted-foreground">{timeSince(order.updatedAt || order.updated_at || order.createdAt || order.created_at)}</span>
             </div>
 
             {/* Service info + Order ID */}
@@ -108,7 +108,7 @@ const OrderTracker = ({ order, expanded, onToggle }: { order: any; expanded: boo
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span>Qty: <strong className="text-foreground">{order.quantity?.toLocaleString()}</strong></span>
               <span>Cost: <strong className="text-primary">{formatCurrency(Number(order.charge || order.cost || 0))}</strong></span>
-              <span>{new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+              <span>{new Date(order.createdAt || order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
             </div>
           </div>
 
@@ -277,11 +277,11 @@ const OrderTracker = ({ order, expanded, onToggle }: { order: any; expanded: boo
                   </div>
                   <div>
                     <p className="text-[11px] text-muted-foreground">Placed On</p>
-                    <p className="text-sm font-semibold">{new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                    <p className="text-sm font-semibold">{new Date(order.createdAt || order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
                   </div>
                   <div>
                     <p className="text-[11px] text-muted-foreground">Last Update</p>
-                    <p className="text-sm font-semibold">{new Date(order.updatedAt || order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                    <p className="text-sm font-semibold">{new Date(order.updatedAt || order.updated_at || order.createdAt || order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                   </div>
                 </div>
               </div>
