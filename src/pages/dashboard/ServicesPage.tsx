@@ -169,8 +169,8 @@ const ServicesPage = () => {
             </div>
 
             <div className="sm:rounded-b-xl sm:border sm:border-t-0 sm:border-border sm:bg-card sm:overflow-hidden pb-4">
-              {filtered.slice(0, visibleCount).map((s) => (
-                <div key={s.service}>
+              {filtered.slice(0, visibleCount).map((s, idx) => (
+                <div key={`${s.service}-${idx}`}>
                   {/* Mobile card */}
                   <div className={`sm:hidden rounded-xl border bg-card p-3 mb-2 ${s.recommended ? 'border-primary/40 ring-1 ring-primary/20' : 'border-border'}`}>
                     <div className="flex items-start justify-between gap-2 mb-1.5">

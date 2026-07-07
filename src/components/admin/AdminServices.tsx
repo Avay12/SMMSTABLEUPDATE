@@ -77,6 +77,7 @@ const AdminServices = () => {
   const [remotePlatform, setRemotePlatform] = useState("all");
   const [remotePage, setRemotePage] = useState(1);
   const [remoteTotalPages, setRemoteTotalPages] = useState(1);
+  const [remoteTotal, setRemoteTotal] = useState(0);
   const [remoteSelected, setRemoteSelected] = useState<Set<number>>(new Set());
   const [importing, setImporting] = useState(false);
 
@@ -122,6 +123,7 @@ const AdminServices = () => {
       const servicesData = data?.data || data?.services || data;
       setRemoteServices(Array.isArray(servicesData) ? servicesData : []);
       setRemoteTotalPages(data?.totalPages || Math.ceil((data?.total || 1) / 50));
+      setRemoteTotal(data?.total || (Array.isArray(servicesData) ? servicesData.length : 0));
     } catch (e) {
       toast({ title: "Failed to fetch remote catalog", variant: "destructive" });
     }
@@ -252,6 +254,29 @@ const AdminServices = () => {
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+  };
+
+  const toggleAllRemoteAcrossPages = async () => {
+    if (remoteSelected.size > 0 && remoteSelected.size >= remoteTotal) {
+      setRemoteSelected(new Set());
+    } else {
+      toast({ title: "Selecting all services...", description: `Fetching all ${remoteTotal} matching records.` });
+      try {
+        const params = new URLSearchParams({ page: "1", limit: "20000" });
+        if (remotePlatform !== "all") params.set("platform", remotePlatform);
+        if (remoteSearch) params.set("search", remoteSearch);
+        const { data } = await apiClient.get(`/admin/providers/${importProvider}/remote-services?${params}`);
+        const servicesData = data?.data || data?.services || data;
+        const newSelected = new Set<number>();
+        if (Array.isArray(servicesData)) {
+          servicesData.forEach((s: any) => newSelected.add(s.service));
+        }
+        setRemoteSelected(newSelected);
+        toast({ title: `Selected all ${newSelected.size} matching services.` });
+      } catch (e) {
+        toast({ title: "Failed to select all", variant: "destructive" });
+      }
+    }
   };
 
   const toggleRemoteAll = () => {
@@ -469,20 +494,20 @@ const AdminServices = () => {
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border bg-card overflow-hidden">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border bg-card overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border bg-secondary/20">
                 <TableHead className="w-12 text-center">
                   <Checkbox checked={selected.size === filteredServices.length && filteredServices.length > 0} onCheckedChange={toggleAll} />
                 </TableHead>
-                <TableHead className="text-xs font-medium">ID</TableHead>
-                <TableHead className="text-xs font-medium">Service</TableHead>
-                <TableHead className="text-xs font-medium">Category</TableHead>
-                <TableHead className="text-xs font-medium">Provider Cost</TableHead>
-                <TableHead className="text-xs font-medium">My Price</TableHead>
-                <TableHead className="text-xs font-medium">Provider</TableHead>
-                <TableHead className="text-xs font-medium text-right">Status</TableHead>
+                <TableHead className="text-xs font-medium whitespace-nowrap">ID</TableHead>
+                <TableHead className="text-xs font-medium whitespace-nowrap">Service</TableHead>
+                <TableHead className="text-xs font-medium whitespace-nowrap">Category</TableHead>
+                <TableHead className="text-xs font-medium whitespace-nowrap">Provider Cost</TableHead>
+                <TableHead className="text-xs font-medium whitespace-nowrap">My Price</TableHead>
+                <TableHead className="text-xs font-medium whitespace-nowrap">Provider</TableHead>
+                <TableHead className="text-xs font-medium text-right whitespace-nowrap">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -495,10 +520,10 @@ const AdminServices = () => {
                       <Checkbox checked={selected.has(getServiceKey(s.providerId || "", s.service))} onCheckedChange={() => toggleSelect(s.providerId || "", s.service)} />
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">{s.service}</TableCell>
-                    <TableCell className="text-sm font-medium max-w-[300px] truncate">
+                    <TableCell className="text-sm font-medium whitespace-nowrap">
                       {s.name}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {s.category}
                     </TableCell>
                     <TableCell className="text-xs font-mono text-muted-foreground">${Number(s.rate).toFixed(4)}</TableCell>
@@ -562,7 +587,7 @@ const AdminServices = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={() => { setRemotePage(1); fetchRemoteServices(); }} className="rounded-xl h-11 px-6 gap-2" disabled={!importProvider || remoteLoading}>
+              <Button onClick={() => { setRemotePage(1); fetchRemoteServices(); }} className="rounded-xl h-11 px-6 gap-2 bg-[#00B49F] hover:bg-[#00B49F]/90 text-white font-semibold" disabled={!importProvider || remoteLoading}>
                 {remoteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                 Fetch
               </Button>
@@ -593,61 +618,70 @@ const AdminServices = () => {
                 </Select>
               </div>
 
-              <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-secondary/10">
-                {remoteServices.length} services found · {remoteSelected.size} selected
-              </div>
-
-              <div className="flex-1 overflow-auto max-h-[40vh]">
-                {remoteLoading ? (
-                  <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-                ) : (
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
-                      <TableRow className="hover:bg-transparent border-border">
-                        <TableHead className="w-12 text-center">
-                          <Checkbox checked={remoteSelected.size === filteredRemoteServices.length && filteredRemoteServices.length > 0} onCheckedChange={toggleRemoteAll} />
-                        </TableHead>
-                        <TableHead className="text-xs font-medium">ID</TableHead>
-                        <TableHead className="text-xs font-medium w-[40%]">Name</TableHead>
-                        <TableHead className="text-xs font-medium">Category</TableHead>
-                        <TableHead className="text-xs font-medium">Platform</TableHead>
-                        <TableHead className="text-xs font-medium">Rate</TableHead>
-                        <TableHead className="text-xs font-medium">Min/Max</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredRemoteServices.map((s) => (
-                        <TableRow key={s.service} className="border-b border-border/50 hover:bg-secondary/20">
-                          <TableCell className="text-center">
-                            <Checkbox checked={remoteSelected.has(s.service)} onCheckedChange={() => toggleRemoteSelect(s.service)} />
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{s.service}</TableCell>
-                          <TableCell className="text-sm font-medium">
-                            <div className="line-clamp-2">{s.name}</div>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            <div className="line-clamp-1">{s.category}</div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-[10px] font-normal">{extractPlatform(s.category)}</Badge>
-                          </TableCell>
-                          <TableCell className="text-xs font-mono text-muted-foreground">${Number(s.rate).toFixed(4)}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{s.min}/{s.max}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+              <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-secondary/10 flex justify-between items-center">
+                <span>{remoteTotal} services found · {remoteSelected.size} selected</span>
+                {remoteTotal > 0 && (
+                  <button onClick={toggleAllRemoteAcrossPages} className="text-primary hover:underline font-medium">
+                    {remoteSelected.size >= remoteTotal ? "Deselect All" : `Select All (${remoteTotal})`}
+                  </button>
                 )}
               </div>
 
-              <div className="p-4 border-t border-border bg-card flex items-center justify-between">
-                <div className="flex gap-2 items-center">
+              <div className="flex-1 overflow-auto max-h-[40vh] p-4 sm:p-5">
+                {remoteLoading ? (
+                  <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+                ) : (
+                  <div className="border border-border/60 rounded-2xl overflow-hidden">
+                    <Table>
+                    <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
+                      <TableRow className="hover:bg-transparent border-border">
+                        <TableHead className="w-12 text-center">
+                          {/* Empty header instead of checkbox to match design */}
+                        </TableHead>
+                        <TableHead className="text-xs font-medium">ID</TableHead>
+                        <TableHead className="text-xs font-medium whitespace-nowrap">Name</TableHead>
+                        <TableHead className="text-xs font-medium whitespace-nowrap">Category</TableHead>
+                        <TableHead className="text-xs font-medium whitespace-nowrap">Platform</TableHead>
+                        <TableHead className="text-xs font-medium whitespace-nowrap">Rate</TableHead>
+                        <TableHead className="text-xs font-medium whitespace-nowrap">Min/Max</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredRemoteServices.map((s, idx) => (
+                        <TableRow key={`${s.service}-${idx}`} className="border-b border-border/50 hover:bg-secondary/20">
+                          <TableCell className="text-center">
+                            <Checkbox className="rounded-full" checked={remoteSelected.has(s.service)} onCheckedChange={() => toggleRemoteSelect(s.service)} />
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{s.service}</TableCell>
+                          <TableCell className="text-sm font-medium whitespace-nowrap">
+                            {s.name}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                            {s.category}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            <Badge variant="outline" className="text-[10px] font-normal">{extractPlatform(s.category)}</Badge>
+                          </TableCell>
+                          <TableCell className="text-xs font-mono text-muted-foreground whitespace-nowrap">${Number(s.rate).toFixed(4)}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{s.min}/{s.max}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 border-t border-border bg-card flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+                <div className="flex justify-between sm:justify-start gap-2 items-center w-full sm:w-auto">
                   <span className="text-xs text-muted-foreground mr-2">Page {remotePage} of {remoteTotalPages}</span>
-                  <Button variant="outline" size="sm" className="rounded-lg h-8" disabled={remotePage <= 1} onClick={() => setRemotePage(p => p - 1)}>Prev</Button>
-                  <Button variant="outline" size="sm" className="rounded-lg h-8" disabled={remotePage >= remoteTotalPages} onClick={() => setRemotePage(p => p + 1)}>Next</Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="rounded-full h-8 px-4" disabled={remotePage <= 1} onClick={() => setRemotePage(p => p - 1)}>Previous</Button>
+                    <Button variant="outline" size="sm" className="rounded-full h-8 px-4 font-semibold text-foreground" disabled={remotePage >= remoteTotalPages} onClick={() => setRemotePage(p => p + 1)}>Next</Button>
+                  </div>
                 </div>
-                <Button className="rounded-xl px-8" onClick={handleImportBulk} disabled={importing || remoteSelected.size === 0}>
-                  {importing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                <Button className="w-full sm:w-auto rounded-xl h-11 px-8 bg-[#80D2C8] hover:bg-[#80D2C8]/90 text-white font-semibold" onClick={handleImportBulk} disabled={importing || remoteSelected.size === 0}>
+                  {importing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
                   Import {remoteSelected.size} Services
                 </Button>
               </div>
