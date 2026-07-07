@@ -162,7 +162,7 @@ const AdminServices = () => {
     setPage(1);
     setSelected(new Set());
     fetchServices(1);
-  }, [platformFilter]);
+  }, [platformFilter, search]);
 
   useEffect(() => {
     if (page > 1) {
@@ -191,12 +191,12 @@ const AdminServices = () => {
   }, [importOpen, importProvider]);
 
   useEffect(() => {
-    if (importOpen && remoteServices.length > 0) {
+    if (importOpen) {
       setRemotePage(1);
       setRemoteSelected(new Set());
       fetchRemoteServices();
     }
-  }, [remotePlatform]);
+  }, [remotePlatform, remoteSearch]);
 
   useEffect(() => {
     if (importOpen && remoteServices.length > 0) fetchRemoteServices();
@@ -380,21 +380,8 @@ const AdminServices = () => {
     return ["all", ...Array.from(cats).sort()];
   }, [remoteServices]);
 
-  const filteredServices = useMemo(() => {
-    return services.filter(s => {
-      if (platformFilter !== "all" && extractPlatform(s.category) !== platformFilter) return false;
-      if (query && !s.name.toLowerCase().includes(query.toLowerCase()) && !String(s.service).includes(query) && !s.category.toLowerCase().includes(query.toLowerCase())) return false;
-      return true;
-    });
-  }, [services, platformFilter, query]);
-
-  const filteredRemoteServices = useMemo(() => {
-    return remoteServices.filter(s => {
-      if (remotePlatform !== "all" && extractPlatform(s.category) !== remotePlatform) return false;
-      if (remoteQuery && !s.name.toLowerCase().includes(remoteQuery.toLowerCase()) && !String(s.service).includes(remoteQuery) && !s.category.toLowerCase().includes(remoteQuery.toLowerCase())) return false;
-      return true;
-    });
-  }, [remoteServices, remotePlatform, remoteQuery]);
+  const filteredServices = services;
+  const filteredRemoteServices = remoteServices;
 
   const activeCount = services.filter(s => s.isActive).length;
 
