@@ -58,10 +58,10 @@ const AdminSettings = () => {
   }, [marginData?.value]);
 
   useEffect(() => {
-    if (maintData) {
-      setMaintenanceMode(maintData.value === "true");
+    if (maintData !== undefined) {
+      setMaintenanceMode(String(maintData.maintenance_mode) === "true");
     }
-  }, [maintData?.value]);
+  }, [maintData?.maintenance_mode]);
 
   const saveMargin = async () => {
     const val = parseFloat(marginInput);
@@ -87,7 +87,7 @@ const AdminSettings = () => {
     try {
       await apiClient.patch("/admin/settings/maintenance_mode", { maintenance_mode: enabled });
       setMaintenanceMode(enabled);
-      queryClient.setQueryData(["maintenance-mode"], { value: enabled ? "true" : "false" });
+      queryClient.setQueryData(["maintenance-mode"], { maintenance_mode: enabled });
       toast({ title: enabled ? "Maintenance Mode ON" : "Maintenance Mode OFF" });
     } catch (e) {
       toast({ title: "Error", description: "Failed to update maintenance mode", variant: "destructive" });
