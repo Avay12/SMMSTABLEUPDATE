@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { apiClient } from "@/lib/apiClient";
 import { motion } from "framer-motion";
 import { TrendingUp, Users, ShoppingCart, DollarSign, AlertTriangle, RefreshCw, Loader2, ArrowUpRight, ArrowDownRight } from "lucide-react";
@@ -44,6 +45,7 @@ const MetricCard = ({ title, value, subtitle, icon, trend, trendValue, color = "
 );
 
 const AdminOverview = () => {
+  const { formatCurrency } = useCurrency();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalOrders: 0,
@@ -138,7 +140,7 @@ const AdminOverview = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Total Revenue (All time)"
-          value={`$${stats.totalRevenue.toFixed(2)}`}
+          value={formatCurrency(stats.totalRevenue)}
           icon={<DollarSign className="h-5 w-5 text-primary" />}
           delay={0}
         />
@@ -158,7 +160,7 @@ const AdminOverview = () => {
         />
         <MetricCard
           title="Provider Balance"
-          value={providerBalance !== null ? `$${providerBalance}` : "—"}
+          value={providerBalance !== null ? formatCurrency(Number(providerBalance)) : "—"}
           subtitle="All providers combined"
           icon={<TrendingUp className="h-5 w-5 text-[hsl(var(--fame-success))]" />}
           delay={0.15}
@@ -170,18 +172,18 @@ const AdminOverview = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
           className="rounded-2xl border border-border bg-card p-5">
           <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Deposits</div>
-          <div className="text-2xl font-bold text-primary">${stats.totalRevenue.toFixed(2)}</div>
+          <div className="text-2xl font-bold text-primary">{formatCurrency(stats.totalRevenue)}</div>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
           className="rounded-2xl border border-border bg-card p-5">
           <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Costs</div>
-          <div className="text-2xl font-bold text-destructive">${stats.totalOrderCost.toFixed(2)}</div>
+          <div className="text-2xl font-bold text-destructive">{formatCurrency(stats.totalOrderCost)}</div>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
           className="rounded-2xl border border-border bg-card p-5">
           <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Net Profit</div>
           <div className={`text-2xl font-bold ${stats.profit >= 0 ? "text-[hsl(var(--fame-success))]" : "text-destructive"}`}>
-            ${stats.profit.toFixed(2)}
+            {formatCurrency(stats.profit)}
           </div>
         </motion.div>
       </div>

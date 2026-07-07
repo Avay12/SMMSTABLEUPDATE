@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { apiClient } from "@/lib/apiClient";
 import { motion } from "framer-motion";
 import { Search, Loader2, RefreshCw, Lock } from "lucide-react";
@@ -19,6 +20,7 @@ const typeColor = (type: string) => {
 };
 
 const AdminTransactions = () => {
+  const { formatCurrency } = useCurrency();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -56,12 +58,12 @@ const AdminTransactions = () => {
         await apiClient.post(`/admin/refunds/${refundTx.orderId}/partial`, {
           amount: Number(partialAmount)
         });
-        toast({ title: "Partial Refund processed", description: `$${Number(partialAmount).toFixed(4)} credited back` });
+        toast({ title: "Partial Refund processed", description: `${formatCurrency(Number(partialAmount))} credited back` });
       } else {
         await apiClient.post(`/admin/orders/${refundTx.orderId}/refund`, {
           amount: Number(refundTx.amount)
         });
-        toast({ title: "Full Refund processed", description: `$${Number(refundTx.amount).toFixed(4)} credited back` });
+        toast({ title: "Full Refund processed", description: `${formatCurrency(Number(refundTx.amount))} credited back` });
       }
     } catch (e: any) {
       toast({ title: "Refund failed", description: e.response?.data?.message || e.message, variant: "destructive" });
@@ -108,7 +110,7 @@ const AdminTransactions = () => {
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline" className={`${typeColor(t.type)} text-[10px]`}>{t.type}</Badge>
                     {t.type === 'REFUND' || t.type === 'refund' ? <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">Refund</Badge> : null}
-                    <span className="text-sm font-bold">${Number(t.amount).toFixed(4)}</span>
+                    <span className="text-sm font-bold">{formatCurrency(Number(t.amount))}</span>
                   </div>
                   {t.description && <div className="text-xs text-muted-foreground">{t.description}</div>}
                   <div className="text-[10px] text-muted-foreground/60 font-mono truncate">
@@ -152,17 +154,17 @@ const AdminTransactions = () => {
             </DialogTitle>
             <DialogDescription>
               {refundType === "FULL" 
-                ? `This will credit $${Number(refundTx?.amount || 0).toFixed(4)} back to the user's balance and mark the order as refunded.`
+                ? `This will credit ${formatCurrency(Number(refundTx?.amount || 0))} back to the user's balance and mark the order as refunded.`
                 : `Enter the specific amount to credit back to the user for this partial refund.`}
             </DialogDescription>
           </DialogHeader>
           <div className="rounded-xl bg-secondary p-3 text-sm space-y-1">
             <div><span className="text-muted-foreground">Order ID:</span> {refundTx?.orderId}</div>
-            <div><span className="text-muted-foreground">Max Refundable:</span> <span className="font-semibold">${Number(refundTx?.amount || 0).toFixed(4)}</span></div>
+            <div><span className="text-muted-foreground">Max Refundable:</span> <span className="font-semibold">{formatCurrency(Number(refundTx?.amount || 0))}</span></div>
           </div>
           {refundType === "PARTIAL" && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">Refund Amount ($)</label>
+              <label className="text-sm font-medium">Refund Amount</label>
               <Input 
                 type="number" 
                 step="0.01"

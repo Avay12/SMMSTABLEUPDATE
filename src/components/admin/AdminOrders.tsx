@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useTransition } from "react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { apiClient } from "@/lib/apiClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Loader2, RefreshCw, RotateCcw } from "lucide-react";
@@ -35,6 +36,7 @@ const activeStatusColor = (s: string) => {
 };
 
 const AdminOrders = () => {
+  const { formatCurrency } = useCurrency();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
@@ -104,7 +106,7 @@ const AdminOrders = () => {
       await apiClient.post(`/admin/orders/${refundOrder.id}/refund`, {
         amount: Number(refundOrder.charge || refundOrder.cost)
       });
-      toast({ title: "Refund processed", description: `$${Number(refundOrder.charge || refundOrder.cost).toFixed(4)} credited back` });
+      toast({ title: "Refund processed", description: `${formatCurrency(Number(refundOrder.charge || refundOrder.cost))} credited back` });
     } catch (e) {
       toast({ title: "Refund failed", variant: "destructive" });
     } finally {
@@ -170,7 +172,7 @@ const AdminOrders = () => {
                     <div className="text-xs text-muted-foreground truncate">{o.link}</div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span>Qty: <strong className="text-foreground">{o.quantity}</strong></span>
-                      <span>Cost: <strong className="text-primary">${Number(o.charge || o.cost).toFixed(4)}</strong></span>
+                      <span>Cost: <strong className="text-primary">{formatCurrency(Number(o.charge || o.cost))}</strong></span>
                       <span>{o.createdAt ? new Date(o.createdAt).toLocaleString() : 'N/A'}</span>
                     </div>
                     <div className="flex items-center gap-3 text-[10px] text-muted-foreground/80 font-mono mt-0.5">
@@ -215,11 +217,11 @@ const AdminOrders = () => {
         <DialogContent className="sm:max-w-sm max-w-[calc(100vw-2rem)] bg-card border-border rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive"><RotateCcw className="h-4 w-4" /> Confirm Refund</DialogTitle>
-            <DialogDescription>This will credit ${Number(refundOrder?.cost || 0).toFixed(4)} back to the user's balance and mark the order as refunded.</DialogDescription>
+            <DialogDescription>This will credit {formatCurrency(Number(refundOrder?.cost || refundOrder?.charge || 0))} back to the user's balance and mark the order as refunded.</DialogDescription>
           </DialogHeader>
           <div className="rounded-xl bg-secondary p-3 text-sm space-y-1">
             <div><span className="text-muted-foreground">Service:</span> {refundOrder?.service || refundOrder?.service_name}</div>
-            <div><span className="text-muted-foreground">Amount:</span> <span className="text-primary font-semibold">${Number(refundOrder?.charge || refundOrder?.cost || 0).toFixed(4)}</span></div>
+            <div><span className="text-muted-foreground">Amount:</span> <span className="text-primary font-semibold">{formatCurrency(Number(refundOrder?.charge || refundOrder?.cost || 0))}</span></div>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" className="rounded-xl" onClick={() => setRefundDialog(false)}>Cancel</Button>

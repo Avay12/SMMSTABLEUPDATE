@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useTransition, useCallback, useRef } from "react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { apiClient } from "@/lib/apiClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Loader2, RefreshCw, Check, X, Download, Package, Trash2, Filter } from "lucide-react";
@@ -66,6 +67,8 @@ const AdminServices = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [syncing, setSyncing] = useState(false);
 
+  const { formatCurrency } = useCurrency();
+
   // Import Modal State
   const [importOpen, setImportOpen] = useState(false);
   const [importProvider, setImportProvider] = useState("");
@@ -85,9 +88,6 @@ const AdminServices = () => {
     try {
       const { data } = await apiClient.get('/admin/providers');
       setProviders(data || []);
-      if (data && data.length > 0 && !importProvider) {
-        setImportProvider(data[0].id);
-      }
     } catch (e) {
       toast({ title: "Failed to load providers", variant: "destructive" });
     }
@@ -121,7 +121,9 @@ const AdminServices = () => {
 
       const { data } = await apiClient.get(`/admin/providers/${importProvider}/remote-services?${params}`);
       const servicesData = data?.data || data?.services || data;
-      setRemoteServices(Array.isArray(servicesData) ? servicesData : []);
+      const arr = Array.isArray(servicesData) ? servicesData : [];
+      arr.sort((a: any, b: any) => a.service - b.service);
+      setRemoteServices(arr);
       setRemoteTotalPages(data?.totalPages || Math.ceil((data?.total || 1) / 50));
       setRemoteTotal(data?.total || (Array.isArray(servicesData) ? servicesData.length : 0));
     } catch (e) {
@@ -188,14 +190,13 @@ const AdminServices = () => {
     if (importOpen) {
       setRemotePage(1);
       setRemoteSelected(new Set());
-      fetchRemoteServices();
+      setRemoteServices([]);
     }
-  }, [importOpen, importProvider]);
+  }, [importOpen]);
 
   useEffect(() => {
-    if (importOpen) {
+    if (importOpen && importProvider) {
       setRemotePage(1);
-      setRemoteSelected(new Set());
       fetchRemoteServices();
     }
   }, [remotePlatform, remoteSearch]);
@@ -526,8 +527,8 @@ const AdminServices = () => {
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {s.category}
                     </TableCell>
-                    <TableCell className="text-xs font-mono text-muted-foreground">${Number(s.rate).toFixed(4)}</TableCell>
-                    <TableCell className="text-xs font-mono font-medium text-emerald-500">${Number(s.customRate || s.rate).toFixed(4)}</TableCell>
+                    <TableCell className="text-xs font-mono text-muted-foreground">{formatCurrency(Number(s.rate))}</TableCell>
+                    <TableCell className="text-xs font-mono font-medium text-emerald-500">{formatCurrency(Number(s.customRate || s.rate))}</TableCell>
                     <TableCell>
                       <Select value={s.providerId || ""} onValueChange={(val) => toast({title: "Coming soon", description: "Provider reassignment is not fully implemented yet."})}>
                         <SelectTrigger className="h-7 w-fit text-[11px] font-medium bg-secondary/80 border-0 rounded-full shadow-none gap-1.5 hover:bg-secondary">
@@ -662,7 +663,7 @@ const AdminServices = () => {
                           <TableCell className="whitespace-nowrap">
                             <Badge variant="outline" className="text-[10px] font-normal">{extractPlatform(s.category)}</Badge>
                           </TableCell>
-                          <TableCell className="text-xs font-mono text-muted-foreground whitespace-nowrap">${Number(s.rate).toFixed(4)}</TableCell>
+                          <TableCell className="text-xs font-mono text-muted-foreground whitespace-nowrap">{formatCurrency(Number(s.rate))}</TableCell>
                           <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{s.min}/{s.max}</TableCell>
                         </TableRow>
                       ))}

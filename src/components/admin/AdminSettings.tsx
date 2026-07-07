@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import MfaSetup from "./MfaSetup";
 
@@ -26,26 +26,42 @@ const AdminSettings = () => {
   const [confirmTitle, setConfirmTitle] = useState("");
   const [confirmDesc, setConfirmDesc] = useState("");
 
+  const { data: marginData } = useQuery({
+    queryKey: ["site-margin"],
+    queryFn: async () => {
+      const { data } = await apiClient.get("/admin/settings/service_margin");
+      return data;
+    },
+    refetchInterval: 5000,
+  });
+
+  const { data: maintData } = useQuery({
+    queryKey: ["maintenance-mode"],
+    queryFn: async () => {
+      const { data } = await apiClient.get("/admin/settings/maintenance_mode");
+      return data;
+    },
+    refetchInterval: 5000,
+  });
+
   useEffect(() => {
-    (async () => {
-      try {
-        const { data: marginData } = await apiClient.get("/admin/settings/service_margin");
-        if (marginData && marginData.value) {
-          setCurrentMargin(marginData.value);
-          setMarginInput(marginData.value);
-        }
-      } catch (e) {
-        console.error("Failed to load margin", e);
-      }
-      
-      try {
-        const { data: maintData } = await apiClient.get("/admin/settings/maintenance_mode");
-        if (maintData) setMaintenanceMode(maintData.value === "true");
-      } catch (e) {
-        console.error("Failed to load maintenance mode", e);
-      }
-    })();
-  }, []);
+    if (marginData?.value) {
+      setCurrentMargin(marginData.value);
+    }
+  }, [marginData?.value]);
+
+  useEffect(() => {
+    // Only set initial margin input once so we don't overwrite typing
+    if (marginData?.value && marginInput === "1.5") {
+      setMarginInput(marginData.value);
+    }
+  }, [marginData?.value]);
+
+  useEffect(() => {
+    if (maintData) {
+      setMaintenanceMode(maintData.value === "true");
+    }
+  }, [maintData?.value]);
 
   const saveMargin = async () => {
     const val = parseFloat(marginInput);
@@ -71,6 +87,7 @@ const AdminSettings = () => {
     try {
       await apiClient.patch("/admin/settings/maintenance_mode", { maintenance_mode: enabled });
       setMaintenanceMode(enabled);
+      queryClient.setQueryData(["maintenance-mode"], { value: enabled ? "true" : "false" });
       toast({ title: enabled ? "Maintenance Mode ON" : "Maintenance Mode OFF" });
     } catch (e) {
       toast({ title: "Error", description: "Failed to update maintenance mode", variant: "destructive" });
