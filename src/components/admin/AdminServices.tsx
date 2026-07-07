@@ -376,9 +376,18 @@ const AdminServices = () => {
   const platforms = useMemo(() => ["all", ...categories], [categories]);
 
   const remotePlatforms = useMemo(() => {
-    const cats = new Set(remoteServices.map((s) => extractPlatform(s.category)));
-    return ["all", ...Array.from(cats).sort()];
-  }, [remoteServices]);
+    const standardPlatforms = [
+      "Instagram", "TikTok", "YouTube", "Facebook", "X (Twitter)", 
+      "Telegram", "Spotify", "Twitch", "Kick", "LinkedIn", 
+      "Discord", "Threads", "Snapchat", "SoundCloud", 
+      "Pinterest", "Reddit", "Website Traffic", "Other"
+    ];
+    return ["all", ...standardPlatforms.sort((a, b) => {
+      if (a === "Other") return 1;
+      if (b === "Other") return -1;
+      return a.localeCompare(b);
+    })];
+  }, []);
 
   const filteredServices = services;
   const filteredRemoteServices = remoteServices;
