@@ -83,6 +83,7 @@ const AdminServices = () => {
   const [remoteTotal, setRemoteTotal] = useState(0);
   const [remoteSelected, setRemoteSelected] = useState<Set<number>>(new Set());
   const [importing, setImporting] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const fetchProviders = async () => {
     try {
@@ -111,11 +112,11 @@ const AdminServices = () => {
     if (currentPage === 1) setLoading(false);
   };
 
-  const fetchRemoteServices = async () => {
+  const fetchRemoteServices = async (pageToFetch = remotePage) => {
     if (!importProvider) return;
     setRemoteLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(remotePage), limit: "50" });
+      const params = new URLSearchParams({ page: String(pageToFetch), limit: "50" });
       if (remotePlatform !== "all") params.set("platform", remotePlatform);
       if (remoteSearch) params.set("search", remoteSearch);
 
@@ -126,6 +127,7 @@ const AdminServices = () => {
       setRemoteServices(arr);
       setRemoteTotalPages(data?.totalPages || Math.ceil((data?.total || 1) / 50));
       setRemoteTotal(data?.total || (Array.isArray(servicesData) ? servicesData.length : 0));
+      setHasFetched(true);
     } catch (e) {
       toast({ title: "Failed to fetch remote catalog", variant: "destructive" });
     }
@@ -191,6 +193,7 @@ const AdminServices = () => {
       setRemotePage(1);
       setRemoteSelected(new Set());
       setRemoteServices([]);
+      setHasFetched(false);
     }
   }, [importOpen]);
 
@@ -588,14 +591,14 @@ const AdminServices = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={() => { setRemotePage(1); fetchRemoteServices(); }} className="rounded-xl h-11 px-6 gap-2 bg-[#00B49F] hover:bg-[#00B49F]/90 text-white font-semibold" disabled={!importProvider || remoteLoading}>
+              <Button onClick={() => { setRemotePage(1); fetchRemoteServices(1); }} className="rounded-xl h-11 px-6 gap-2 bg-[#00B49F] hover:bg-[#00B49F]/90 text-white font-semibold" disabled={!importProvider || remoteLoading}>
                 {remoteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                 Fetch
               </Button>
             </div>
           </div>
 
-          {remoteServices.length > 0 && (
+          {(remoteServices.length > 0 || remoteLoading || hasFetched) && (
             <div className="flex-1 flex flex-col min-h-0">
               <div className="flex items-center gap-3 p-4 border-b border-border bg-secondary/20">
                 <div className="flex-1 relative">
@@ -667,6 +670,13 @@ const AdminServices = () => {
                           <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{s.min}/{s.max}</TableCell>
                         </TableRow>
                       ))}
+                      {filteredRemoteServices.length === 0 && !remoteLoading && (
+                        <tr>
+                          <td colSpan={7} className="text-center py-16 text-muted-foreground text-sm">
+                            No new services found for this provider. They may have all been imported.
+                          </td>
+                        </tr>
+                      )}
                     </TableBody>
                     </Table>
                   </div>
