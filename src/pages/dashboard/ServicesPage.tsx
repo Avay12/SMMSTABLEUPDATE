@@ -169,12 +169,16 @@ const ServicesPage = () => {
             </div>
 
             <div className="sm:rounded-b-xl sm:border sm:border-t-0 sm:border-border sm:bg-card sm:overflow-hidden pb-4">
-              {filtered.slice(0, visibleCount).map((s, idx) => (
+              {filtered.slice(0, visibleCount).map((s, idx) => {
+                const platform = getPlatform(s.category);
+                const platformIcon = platformLogos[platform];
+                return (
                 <div key={`${s.service}-${idx}`}>
                   {/* Mobile card */}
                   <div className={`sm:hidden rounded-xl border bg-card p-3 mb-2 ${s.recommended ? 'border-primary/40 ring-1 ring-primary/20' : 'border-border'}`}>
                     <div className="flex items-start justify-between gap-2 mb-1.5">
                       <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        {platformIcon && <img src={platformIcon} alt={platform} className="h-4 w-4 shrink-0" />}
                         {s.recommended && <Star className="h-3.5 w-3.5 text-primary fill-primary shrink-0" />}
                         <span className="font-medium text-sm leading-snug break-words">{s.name}</span>
                       </div>
@@ -198,6 +202,7 @@ const ServicesPage = () => {
                   <div className={`hidden sm:grid grid-cols-[60px_1fr_90px_70px_90px_100px_80px] gap-3 px-4 py-3 text-sm border-b border-border/50 hover:bg-secondary/50 transition-colors items-center ${s.recommended ? 'bg-primary/5' : ''}`}>
                     <span className="text-muted-foreground font-mono text-xs">{s.service}</span>
                     <span className="font-medium truncate flex items-center gap-1.5">
+                      {platformIcon && <img src={platformIcon} alt={platform} className="h-4 w-4 shrink-0" />}
                       {s.recommended && <Star className="h-3.5 w-3.5 text-primary fill-primary shrink-0" />}
                       {s.name}
                     </span>
@@ -214,7 +219,8 @@ const ServicesPage = () => {
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
               {visibleCount < filtered.length && (
                 <div className="py-6 flex justify-center">
                   <Loader2 className="h-6 w-6 animate-spin text-primary/50" />
