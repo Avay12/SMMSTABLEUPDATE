@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useSocket } from "@/contexts/SocketContext";
 import { Shield, Sparkles, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import maintenanceImg from "@/assets/maintenance.png"; // Newly added image
@@ -74,6 +75,7 @@ const MaintenanceGuard = ({ children }: { children: React.ReactNode }) => {
   const [isAdminBypass, setIsAdminBypass] = useState(false);
   const [checked, setChecked] = useState(false);
   const { user } = useAuth();
+  const { socket } = useSocket();
 
   useEffect(() => {
     const check = async () => {
@@ -103,6 +105,33 @@ const MaintenanceGuard = ({ children }: { children: React.ReactNode }) => {
     };
     check();
   }, [user]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleMaintenanceUpdate = (data: any) => {
+      const isOn = data.maintenance_mode === true || data.maintenance_mode === "true";
+      
+      if (isOn && user) {
+        // Allow admins through
+        const isAdmin = user.role === 'ADMIN' || user.role === 'admin';
+        if (isAdmin) {
+          setIsAdminBypass(true);
+          setMaintenance(false);
+        } else {
+          setMaintenance(true);
+        }
+      } else {
+        setMaintenance(isOn);
+      }
+    };
+
+    socket.on('maintenanceUpdate', handleMaintenanceUpdate);
+    
+    return () => {
+      socket.off('maintenanceUpdate', handleMaintenanceUpdate);
+    };
+  }, [socket, user]);
 
   if (!checked) return null;
   if (maintenance) return <MaintenancePage />;
