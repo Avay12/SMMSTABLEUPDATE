@@ -266,7 +266,11 @@ const OrderTracker = ({ order, expanded, onToggle }: { order: any; expanded: boo
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Service ID</p>
+                    <p className="text-sm font-semibold font-mono">{order.serviceId || order.service_id || 'N/A'}</p>
+                  </div>
                   <div>
                     <p className="text-[11px] text-muted-foreground">Quantity</p>
                     <p className="text-sm font-semibold">{order.quantity?.toLocaleString()}</p>
