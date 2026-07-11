@@ -19,7 +19,7 @@ const AdminPayments = () => {
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      const { data } = await apiClient.get('/payment/all');
+      const { data } = await apiClient.get('/payment/all?limit=5000');
       setPayments(data?.payments || []);
     } catch (e) {
       console.error(e);

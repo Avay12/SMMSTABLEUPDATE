@@ -47,8 +47,8 @@ const WalletPage = () => {
     if (!user) return;
     try {
       const [oxaRes, regRes] = await Promise.all([
-        apiClient.get('/payment/easypay/user'),
-        apiClient.get('/payment')
+        apiClient.get('/payment/easypay/user?limit=1000'),
+        apiClient.get('/payment?limit=1000')
       ]);
       const oxa = (oxaRes.data.payments || []).map((p: any) => ({
         id: p.id,
