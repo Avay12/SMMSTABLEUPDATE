@@ -11,6 +11,9 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 
 const AdminPayments = () => {
   const [payments, setPayments] = useState<any[]>([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [apiUnpaidCount, setApiUnpaidCount] = useState(0);
+  const [apiTotalAmount, setApiTotalAmount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
@@ -21,6 +24,9 @@ const AdminPayments = () => {
     try {
       const { data } = await apiClient.get('/payment/all?limit=5000');
       setPayments(data?.payments || []);
+      setTotalRecords(data?.total || 0);
+      setApiUnpaidCount(data?.unpaidCount || 0);
+      setApiTotalAmount(data?.totalAmount || 0);
     } catch (e) {
       console.error(e);
       toast({ title: "Failed to load payments", variant: "destructive" });
@@ -68,12 +74,10 @@ const AdminPayments = () => {
 
   const nprCurrency = currencies?.find(c => c.code === 'NPR') || { rate: 134, symbol: 'Rs' };
   
-  const totalUnpaidNPR = payments.filter(p => !p.is_paid).reduce((acc, p) => {
-    let amt = parseFloat(p.amount) || 0;
-    if (p.currency === 'NPR') return acc + amt;
-    return acc + (amt * nprCurrency.rate);
-  }, 0);
-  const unpaidCount = payments.filter(p => !p.is_paid).length;
+  // Use the API provided totals for a more accurate reflection of the entire database
+  // instead of calculating it from the currently fetched paginated list.
+  const unpaidCount = apiUnpaidCount;
+  const totalUnpaidNPR = apiTotalAmount;
 
   return (
     <div className="space-y-6">
@@ -81,7 +85,7 @@ const AdminPayments = () => {
         <div className="flex items-center gap-4">
           <div>
             <h2 className="text-xl font-bold tracking-tight">Payment Orders</h2>
-            <p className="text-sm text-muted-foreground mt-1">{payments.length} total records</p>
+            <p className="text-sm text-muted-foreground mt-1">{totalRecords} total records</p>
           </div>
           <div className="h-10 w-px bg-border mx-2 hidden sm:block"></div>
           <div className="flex flex-col rounded-xl border border-orange-500/20 bg-orange-500/5 px-4 py-2 shadow-sm">
