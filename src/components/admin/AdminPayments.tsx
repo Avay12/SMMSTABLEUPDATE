@@ -90,7 +90,7 @@ const AdminPayments = () => {
           <div className="h-10 w-px bg-border mx-2 hidden sm:block"></div>
           <div className="flex flex-col rounded-xl border border-orange-500/20 bg-orange-500/5 px-4 py-2 shadow-sm">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-orange-600/80">Pending Action</span>
-            <span className="text-sm font-bold text-orange-600">{unpaidCount} unpaid ({nprCurrency.symbol}{(totalUnpaidNPR).toFixed(2)})</span>
+            <span className="text-sm font-bold text-orange-600">{unpaidCount} unpaid ({nprCurrency.symbol}{Number(totalUnpaidNPR).toFixed(2)})</span>
           </div>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
