@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
 
 interface SocketContextType {
   socket: Socket | null;
@@ -22,10 +23,15 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     // Removed early exit so anonymous users can receive global broadcasts like marginUpdate
 
-    const socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const rawApiUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || apiClient.defaults.baseURL || 'https://smmstable.com';
+    const socketUrl = rawApiUrl.replace(/\/api\/?$/, '');
+
     const newSocket = io(socketUrl, {
       withCredentials: true,
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
+      autoConnect: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
     });
 
     newSocket.on('connect', () => {
@@ -33,6 +39,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (user) {
         newSocket.emit('joinUserRoom', user.id);
       }
+    });
+
+    newSocket.on('connect_error', (err) => {
+      console.warn('Socket connection error:', err.message);
     });
 
     newSocket.on('disconnect', () => {

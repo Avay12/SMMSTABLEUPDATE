@@ -99,7 +99,7 @@ const AdminJungey = () => {
     };
   }, []);
 
-  const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const getApiUrl = () => import.meta.env.VITE_API_URL || apiClient.defaults.baseURL?.replace(/\/api\/?$/, '') || 'https://smmstable.com';
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return;

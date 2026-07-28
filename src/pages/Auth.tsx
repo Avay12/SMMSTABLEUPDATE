@@ -512,7 +512,7 @@ const Auth = () => {
                   variant="outline"
                   className="w-full h-[3.25rem] text-base rounded-xl active:scale-[0.96] hover:scale-[1.01] transition-all font-semibold hover:-translate-y-0.5 bg-secondary/20 border-border/60"
                   onClick={() => {
-                    const baseUrl = apiClient.defaults.baseURL || 'http://localhost:3000/api';
+                    const baseUrl = apiClient.defaults.baseURL || 'https://smmstable.com/api';
                     window.location.href = `${baseUrl}/oauth/google?site=smmstable`;
                   }}
                 >

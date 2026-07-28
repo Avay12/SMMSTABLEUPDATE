@@ -59,8 +59,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         socketRef.current = io(socketUrl || window.location.origin, {
           path: '/socket.io/',
-          transports: ['websocket', 'polling'],
+          transports: ['polling', 'websocket'],
           withCredentials: true,
+        });
+
+        socketRef.current.on('connect_error', (err) => {
+          console.warn('AuthContext socket connection error:', err.message);
         });
 
         socketRef.current.on('connect', () => {
