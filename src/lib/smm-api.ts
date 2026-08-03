@@ -70,30 +70,37 @@ export function groupByCategory(services: SmmService[]) {
   return map;
 }
 
-/** Derive a platform name from a category string */
-export function getPlatform(category: string): string {
-  const lower = category.toLowerCase();
-  if (lower.includes("instagram")) return "Instagram";
-  if (lower.includes("tiktok")) return "TikTok";
-  if (lower.includes("youtube")) return "YouTube";
-  if (lower.includes("facebook")) return "Facebook";
-  if (lower.includes("twitter") || lower.includes("x ")) return "X (Twitter)";
-  if (lower.includes("telegram")) return "Telegram";
-  if (lower.includes("spotify")) return "Spotify";
-  if (lower.includes("twitch")) return "Twitch";
-  if (lower.includes("kick")) return "Kick";
-  if (lower.includes("linkedin")) return "LinkedIn";
-  if (lower.includes("discord")) return "Discord";
-  if (lower.includes("threads")) return "Threads";
-  if (lower.includes("snapchat")) return "Snapchat";
-  if (lower.includes("website") || lower.includes("traffic")) return "Website Traffic";
-  return "Other";
+/** Derive a platform name from a category string or service name */
+export function getPlatform(category: string, name?: string): string {
+  const lowerCat = (category || "").toLowerCase();
+  const lowerName = (name || "").toLowerCase();
+
+  const checkText = (text: string) => {
+    if (!text) return null;
+    if (text.includes("instagram")) return "Instagram";
+    if (text.includes("tiktok")) return "TikTok";
+    if (text.includes("youtube")) return "YouTube";
+    if (text.includes("facebook")) return "Facebook";
+    if (text.includes("twitter") || text.includes("x ")) return "X (Twitter)";
+    if (text.includes("telegram")) return "Telegram";
+    if (text.includes("spotify")) return "Spotify";
+    if (text.includes("twitch")) return "Twitch";
+    if (text.includes("kick")) return "Kick";
+    if (text.includes("linkedin")) return "LinkedIn";
+    if (text.includes("discord")) return "Discord";
+    if (text.includes("threads")) return "Threads";
+    if (text.includes("snapchat")) return "Snapchat";
+    if (text.includes("website") || text.includes("traffic")) return "Website Traffic";
+    return null;
+  };
+
+  return checkText(lowerCat) || (name ? checkText(lowerName) : null) || "Other";
 }
 
 export function getPlatforms(services: SmmService[]) {
   const counts = new Map<string, number>();
   for (const s of services) {
-    const p = getPlatform(s.category);
+    const p = getPlatform(s.category, s.name);
     counts.set(p, (counts.get(p) || 0) + 1);
   }
   const all: { name: string; count: number }[] = [

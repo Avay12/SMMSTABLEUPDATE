@@ -45,7 +45,7 @@ const ServicesPage = () => {
     if (!services) return new Map<string, number>();
     const counts = new Map<string, number>();
     for (const s of services) {
-      const p = getPlatform(s.category);
+      const p = getPlatform(s.category, s.name);
       counts.set(p, (counts.get(p) || 0) + 1);
     }
     return counts;
@@ -53,17 +53,56 @@ const ServicesPage = () => {
 
   const filtered = useMemo(() => {
     if (!services) return [];
-    const result = services.filter((s) => {
-      const matchSearch =
-        s.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.service.toString().includes(search) ||
-        s.category.toLowerCase().includes(search.toLowerCase());
-      const matchPlatform =
-        activePlatform === "All" || getPlatform(s.category) === activePlatform;
-      return matchSearch && matchPlatform;
-    });
+    const rawTerm = search.trim().toLowerCase();
+    const term = rawTerm.replace(/\s+/g, "");
+
+    let result: SmmService[] = [];
+
+    if (!term) {
+      if (activePlatform === "All") {
+        result = services;
+      } else {
+        result = services.filter((s) => getPlatform(s.category, s.name) === activePlatform);
+      }
+    } else {
+      const getSId = (s: any) => String(s.service ?? s.serviceId ?? s.service_id ?? s.id ?? "").trim();
+
+      // 1. Exact ID match across all ID aliases
+      const exactIdMatches = services.filter((s) => getSId(s) === term);
+      if (exactIdMatches.length > 0) {
+        result = exactIdMatches;
+      } else {
+        const isNumeric = /^\d+$/.test(term);
+        if (isNumeric) {
+          // 2. Partial ID match if numeric
+          const partialIdMatches = services.filter((s) => getSId(s).includes(term));
+          if (partialIdMatches.length > 0) {
+            result = partialIdMatches;
+          } else {
+            // 3. Search ONLY name for numeric terms (do not match category names)
+            result = services.filter((s) => {
+              const matchPlatform =
+                activePlatform === "All" || getPlatform(s.category, s.name) === activePlatform;
+              const matchName = s.name.toLowerCase().includes(term);
+              return matchPlatform && matchName;
+            });
+          }
+        } else {
+          // 4. Non-numeric text search: check name or category
+          result = services.filter((s) => {
+            const matchPlatform =
+              activePlatform === "All" || getPlatform(s.category, s.name) === activePlatform;
+            const matchText =
+              s.name.toLowerCase().includes(term) ||
+              s.category.toLowerCase().includes(term);
+            return matchPlatform && matchText;
+          });
+        }
+      }
+    }
+
     // Sort recommended first
-    return result.sort((a, b) => (b.recommended ? 1 : 0) - (a.recommended ? 1 : 0));
+    return [...result].sort((a, b) => (b.recommended ? 1 : 0) - (a.recommended ? 1 : 0));
   }, [services, search, activePlatform]);
 
   // Reset visible count when filters change
@@ -170,7 +209,7 @@ const ServicesPage = () => {
 
             <div className="sm:rounded-b-xl sm:border sm:border-t-0 sm:border-border sm:bg-card sm:overflow-hidden pb-4">
               {filtered.slice(0, visibleCount).map((s, idx) => {
-                const platform = getPlatform(s.category);
+                const platform = getPlatform(s.category, s.name);
                 const platformIcon = platformLogos[platform];
                 return (
                 <div key={`${s.service}-${idx}`}>

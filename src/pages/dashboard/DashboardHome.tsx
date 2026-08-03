@@ -62,7 +62,7 @@ const DashboardHome = () => {
     if (state?.selectedService) {
       const svc = state.selectedService;
       setSelected(svc);
-      setSelectedPlatform(getPlatform(svc.category));
+      setSelectedPlatform(getPlatform(svc.category, svc.name));
       setQuantity(svc.min.toString());
       setStep("details");
       navigate(".", { replace: true, state: {} });
@@ -76,7 +76,7 @@ const DashboardHome = () => {
     if (!services) return [];
     const counts = new Map<string, number>();
     for (const s of services) {
-      const p = getPlatform(s.category);
+      const p = getPlatform(s.category, s.name);
       counts.set(p, (counts.get(p) || 0) + 1);
     }
     return [...counts.entries()]
@@ -85,11 +85,42 @@ const DashboardHome = () => {
   }, [services]);
 
   const filteredServices = useMemo(() => {
-    if (!services || !selectedPlatform) return [];
+    if (!services) return [];
+    const rawTerm = search.trim().toLowerCase();
+    const term = rawTerm.replace(/\s+/g, "");
+
+    if (!term) {
+      if (!selectedPlatform) return [];
+      return services.filter((s) => getPlatform(s.category, s.name) === selectedPlatform);
+    }
+
+    const getSId = (s: any) => String(s.service ?? s.serviceId ?? s.service_id ?? s.id ?? "").trim();
+
+    // 1. Exact ID match check across all ID aliases
+    const exactIdMatches = services.filter((s) => getSId(s) === term);
+    if (exactIdMatches.length > 0) return exactIdMatches;
+
+    const isNumeric = /^\d+$/.test(term);
+    if (isNumeric) {
+      // 2. Partial ID match if numeric
+      const partialIdMatches = services.filter((s) => getSId(s).includes(term));
+      if (partialIdMatches.length > 0) return partialIdMatches;
+
+      // 3. Search ONLY name for numeric terms (do not match category names to prevent category ID numbers from matching all services)
+      return services.filter((s) => {
+        const matchPlatform = !selectedPlatform || getPlatform(s.category, s.name) === selectedPlatform;
+        const matchName = s.name.toLowerCase().includes(term);
+        return matchPlatform && matchName;
+      });
+    }
+
+    // 4. Non-numeric text search: check name or category
     return services.filter((s) => {
-      const matchPlatform = getPlatform(s.category) === selectedPlatform;
-      const matchSearch = !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.service.toString().includes(search);
-      return matchPlatform && matchSearch;
+      const matchPlatform = !selectedPlatform || getPlatform(s.category, s.name) === selectedPlatform;
+      const matchText =
+        s.name.toLowerCase().includes(term) ||
+        s.category.toLowerCase().includes(term);
+      return matchPlatform && matchText;
     });
   }, [services, selectedPlatform, search]);
 
