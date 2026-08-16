@@ -2,8 +2,11 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { XCircle, ArrowLeft, RefreshCcw } from "lucide-react";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const PaymentFailed = () => {
+  useDocumentMeta(PAGE_SEO.paymentFailed);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const ref = searchParams.get("ref");

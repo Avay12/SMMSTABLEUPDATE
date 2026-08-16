@@ -8,8 +8,11 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Star, CheckCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const FeedbackPage = () => {
+  useDocumentMeta(PAGE_SEO.feedback);
   const { user } = useAuth();
   const [rating, setRating] = useState(5);
   const [message, setMessage] = useState("");

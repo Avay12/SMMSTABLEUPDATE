@@ -11,6 +11,8 @@ import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "@/hooks/useAuth";
 import { apiClient } from "@/lib/apiClient";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 interface PendingPayment {
   trackId: string;
@@ -26,6 +28,7 @@ interface PendingPayment {
 type PaymentMethod = null | "manual";
 
 const WalletPage = () => {
+  useDocumentMeta(PAGE_SEO.wallet);
   const { user, profile, refreshProfile } = useAuth();
   const { formatCurrency, currentCurrency, currencies } = useCurrency();
   const nprCurrency = currencies?.find(c => c.code === 'NPR') || { rate: 134, symbol: 'Rs', code: 'NPR' };

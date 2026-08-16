@@ -1,5 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Trophy } from "lucide-react";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const tiers = [
   { name: "Bronze", min: 0, color: "text-[hsl(var(--fame-orange))]", desc: "Starting tier. Access to all basic services." },
@@ -10,6 +12,7 @@ const tiers = [
 ];
 
 const LoyaltyPage = () => {
+  useDocumentMeta(PAGE_SEO.loyalty);
   const { profile } = useAuth();
   const currentTier = profile?.tier || "Bronze";
 

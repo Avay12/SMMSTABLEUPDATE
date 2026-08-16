@@ -5,6 +5,8 @@ import { Loader2, RefreshCw, ShoppingCart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const platformLogos: Record<string, string> = {
   Instagram: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg",
@@ -33,6 +35,7 @@ const formatAvgTime = (mins?: string | number) => {
 };
 
 const ServicesPage = () => {
+  useDocumentMeta(PAGE_SEO.services);
   const { data: services, isLoading, error, refetch } = useServices();
   const { formatCurrency } = useCurrency();
   

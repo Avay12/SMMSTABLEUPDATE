@@ -12,6 +12,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 import { apiClient } from "@/lib/apiClient";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 /* ───── password strength ───── */
 const getStrength = (pw: string) => {
@@ -57,6 +59,7 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode") || "login";
   const [isLogin, setIsLogin] = useState(mode === "login");
+  useDocumentMeta(PAGE_SEO.auth);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 

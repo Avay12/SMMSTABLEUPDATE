@@ -11,8 +11,11 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2, Send, MessageSquare, CheckCircle, Paperclip, X, FileText, Image as ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const SupportPage = () => {
+  useDocumentMeta(PAGE_SEO.support);
   const { user } = useAuth();
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

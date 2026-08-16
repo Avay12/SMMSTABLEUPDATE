@@ -1,4 +1,6 @@
 import { CheckCircle } from "lucide-react";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const steps = [
   { title: "Create an Account", desc: "Sign up with your email and verify it to get started." },
@@ -9,7 +11,10 @@ const steps = [
   { title: "Need Help?", desc: "Visit the Support page to submit a ticket. Our team responds within 24 hours." },
 ];
 
-const HowToUsePage = () => (
+const HowToUsePage = () => {
+  useDocumentMeta(PAGE_SEO.howToUse);
+
+  return (
   <div>
     <h1 className="text-xl sm:text-2xl font-bold mb-1">How to Use</h1>
     <p className="text-sm text-muted-foreground mb-6 sm:mb-8">Follow these simple steps to get started</p>
@@ -27,6 +32,7 @@ const HowToUsePage = () => (
       ))}
     </div>
   </div>
-);
+  );
+};
 
 export default HowToUsePage;

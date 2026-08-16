@@ -10,6 +10,8 @@ import { useServices, getPlatform, getPlatforms, type SmmService } from "@/lib/s
 import { apiClient } from "@/lib/apiClient";
 
 import { useLocation, useNavigate } from "react-router-dom";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const platformIcons: Record<string, string> = {
   // ... (unchanged part omitted for brevity, let's keep it complete though)
@@ -42,6 +44,7 @@ const formatAvgTime = (mins?: string | number) => {
 type Step = "idle" | "platform" | "service" | "details";
 
 const DashboardHome = () => {
+  useDocumentMeta(PAGE_SEO.dashboard);
   const { data: services, isLoading } = useServices();
   const { user, profile, refreshProfile } = useAuth();
   const { formatCurrency } = useCurrency();

@@ -6,7 +6,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="border-t border-border py-8 md:py-10 px-5 md:px-6">
+    <footer aria-label="Site footer" className="border-t border-border py-8 md:py-10 px-5 md:px-6">
       <div className="mx-auto max-w-7xl flex flex-col items-center gap-5 md:flex-row md:justify-between md:gap-4">
         <button onClick={scrollToTop} className="flex items-center gap-2.5 cursor-pointer active:scale-[0.97] transition-transform">
           <img src={logo} alt="Smmstable" className="h-8 w-8 rounded-full" />

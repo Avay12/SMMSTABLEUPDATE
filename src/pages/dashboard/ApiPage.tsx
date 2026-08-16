@@ -9,10 +9,13 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiClient } from "@/lib/apiClient";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 type EndpointKey = "balance" | "services" | "add" | "status";
 
 const ApiPage = () => {
+  useDocumentMeta(PAGE_SEO.api);
   const { user } = useAuth();
   const [copied, setCopied] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);

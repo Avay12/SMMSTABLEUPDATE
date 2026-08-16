@@ -6,8 +6,11 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Loader2, CheckCircle2 } from "lucide-react";
 import { apiClient } from "@/lib/apiClient";
 import logo from "@/assets/logo.png";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const ForgotPassword = () => {
+  useDocumentMeta(PAGE_SEO.forgotPassword);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);

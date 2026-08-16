@@ -4,8 +4,11 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const PaymentSuccess = () => {
+  useDocumentMeta(PAGE_SEO.paymentSuccess);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const ref = searchParams.get("ref");

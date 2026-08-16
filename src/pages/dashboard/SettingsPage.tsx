@@ -6,8 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Save } from "lucide-react";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const SettingsPage = () => {
+  useDocumentMeta(PAGE_SEO.settings);
   const { user, profile, refreshProfile } = useAuth();
   const [username, setUsername] = useState(profile?.username || "");
   const [saving, setSaving] = useState(false);

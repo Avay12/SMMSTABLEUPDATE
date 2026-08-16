@@ -11,6 +11,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 /* ─── Status Pipeline ─── */
 const STATUS_STEPS = [
@@ -299,6 +301,7 @@ const OrderTracker = ({ order, expanded, onToggle }: { order: any; expanded: boo
 
 /* ─── Main Page ─── */
 const OrderHistory = () => {
+  useDocumentMeta(PAGE_SEO.orders);
   const { user } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

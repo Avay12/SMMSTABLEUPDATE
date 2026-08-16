@@ -17,6 +17,8 @@ import AdminPopups from "@/components/admin/AdminPopups";
 import AdminTelegram from "@/components/admin/AdminTelegram";
 import { AdminCurrencies } from "@/components/admin/AdminCurrencies";
 import AdminPayments from "@/components/admin/AdminPayments";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -37,6 +39,7 @@ const NAV_ITEMS = [
 ];
 
 const AdminPage = () => {
+  useDocumentMeta(PAGE_SEO.admin);
   const { isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

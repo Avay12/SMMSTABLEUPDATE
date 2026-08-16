@@ -6,8 +6,11 @@ import { Label } from "@/components/ui/label";
 import { KeyRound, Eye, EyeOff, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { apiClient } from "@/lib/apiClient";
 import logo from "@/assets/logo.png";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const ResetPassword = () => {
+  useDocumentMeta(PAGE_SEO.resetPassword);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPw, setShowPw] = useState(false);

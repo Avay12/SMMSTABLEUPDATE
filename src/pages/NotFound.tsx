@@ -1,11 +1,20 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const NotFound = () => {
   const location = useLocation();
+  useDocumentMeta(PAGE_SEO.notFound);
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    // Add noindex meta for 404 pages
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    document.head.appendChild(meta);
+    return () => { document.head.removeChild(meta); };
   }, [location.pathname]);
 
   return (

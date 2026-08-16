@@ -40,7 +40,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "border-b border-border/60 bg-background/90 backdrop-blur-xl shadow-sm" : "bg-background/60 backdrop-blur-lg"}`}>
+    <nav aria-label="Main navigation" className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "border-b border-border/60 bg-background/90 backdrop-blur-xl shadow-sm" : "bg-background/60 backdrop-blur-lg"}`}>
       <div className="mx-auto flex h-14 md:h-16 max-w-7xl items-center justify-between px-5 md:px-6">
         <button onClick={scrollToTop} className="flex items-center gap-2 cursor-pointer active:scale-[0.97] transition-transform">
           <img src={logo} alt="Smmstable" className="h-8 w-8 rounded-full" />

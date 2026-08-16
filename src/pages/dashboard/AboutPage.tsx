@@ -3,8 +3,13 @@ import instagramLogo from "@/assets/instagram-logo.png";
 import facebookLogo from "@/assets/facebook-logo.png";
 import emailIcon from "@/assets/email-icon.png";
 import phoneIcon from "@/assets/phone-icon.png";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
-const AboutPage = () => (
+const AboutPage = () => {
+  useDocumentMeta(PAGE_SEO.about);
+
+  return (
   <div>
     <h1 className="text-xl sm:text-2xl font-bold mb-1">About Us</h1>
     <p className="text-sm text-muted-foreground mb-6 sm:mb-8">Learn more about Smmstable</p>
@@ -69,6 +74,7 @@ const AboutPage = () => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default AboutPage;

@@ -7,18 +7,24 @@ import PaymentMethodsSection from "@/components/landing/PaymentMethodsSection";
 import SocialProofSection from "@/components/landing/SocialProofSection";
 import CTASection from "@/components/landing/CTASection";
 import Footer from "@/components/landing/Footer";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { PAGE_SEO } from "@/lib/seo";
 
 const Index = () => {
+  useDocumentMeta(PAGE_SEO.home);
+
   return (
     <div className="min-h-screen">
       <Navbar />
-      <HeroSection />
-      <PaymentMethodsSection />
-      <FeaturesSection />
-      <HowItWorks />
-      <PlatformsSection />
-      <SocialProofSection />
-      <CTASection />
+      <main>
+        <HeroSection />
+        <PaymentMethodsSection />
+        <FeaturesSection />
+        <HowItWorks />
+        <PlatformsSection />
+        <SocialProofSection />
+        <CTASection />
+      </main>
       <Footer />
     </div>
   );
