@@ -10,27 +10,51 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 
-const STATUSES = ["All", "Pending", "Processing", "In progress", "Completed", "Partial", "Cancelled", "Refunded", "Failed"];
+// Backend enum values must match Prisma OrderStatus exactly
+const STATUS_ENUM = {
+  All: "All",
+  PENDING: "PENDING",
+  IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
+  PARTIAL: "PARTIAL",
+  CANCELLED: "CANCELLED",
+  REFUNDED: "REFUNDED",
+  FAILED: "FAILED",
+} as const;
+
+// Display-friendly labels for each backend status
+const STATUS_LABELS: Record<string, string> = {
+  All: "All",
+  PENDING: "Pending",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
+  PARTIAL: "Partial",
+  CANCELLED: "Cancelled",
+  REFUNDED: "Refunded",
+  FAILED: "Failed",
+};
+
+const STATUSES = Object.keys(STATUS_LABELS);
 
 const statusColor = (s: string) => {
-  switch (s?.toLowerCase()) {
-    case "completed": return "bg-[hsl(var(--fame-success))]/10 text-[hsl(var(--fame-success))] border-[hsl(var(--fame-success))]/20 hover:bg-[hsl(var(--fame-success))]/20";
-    case "pending": return "bg-[hsl(var(--fame-orange))]/10 text-[hsl(var(--fame-orange))] border-[hsl(var(--fame-orange))]/20 hover:bg-[hsl(var(--fame-orange))]/20";
-    case "processing": case "in progress": return "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20";
-    case "cancelled": case "refunded": case "failed": return "bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20";
-    case "partial": return "bg-yellow-500/10 text-yellow-600 border-yellow-500/20 hover:bg-yellow-500/20";
+  switch (s) {
+    case "COMPLETED": return "bg-[hsl(var(--fame-success))]/10 text-[hsl(var(--fame-success))] border-[hsl(var(--fame-success))]/20 hover:bg-[hsl(var(--fame-success))]/20";
+    case "PENDING": return "bg-[hsl(var(--fame-orange))]/10 text-[hsl(var(--fame-orange))] border-[hsl(var(--fame-orange))]/20 hover:bg-[hsl(var(--fame-orange))]/20";
+    case "IN_PROGRESS": return "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20";
+    case "CANCELLED": case "REFUNDED": case "FAILED": return "bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20";
+    case "PARTIAL": return "bg-yellow-500/10 text-yellow-600 border-yellow-500/20 hover:bg-yellow-500/20";
     default: return "bg-secondary text-muted-foreground border-border hover:bg-muted";
   }
 };
 
 const activeStatusColor = (s: string) => {
-  switch (s?.toLowerCase()) {
-    case "completed": return "bg-[hsl(var(--fame-success))] text-white border-[hsl(var(--fame-success))] shadow-sm";
-    case "pending": return "bg-[hsl(var(--fame-orange))] text-white border-[hsl(var(--fame-orange))] shadow-sm";
-    case "processing": case "in progress": return "bg-primary text-primary-foreground border-primary shadow-sm";
-    case "cancelled": case "refunded": case "failed": return "bg-destructive text-destructive-foreground border-destructive shadow-sm";
-    case "partial": return "bg-yellow-500 text-white border-yellow-500 shadow-sm";
-    case "all": return "bg-foreground text-background border-foreground shadow-sm";
+  switch (s) {
+    case "COMPLETED": return "bg-[hsl(var(--fame-success))] text-white border-[hsl(var(--fame-success))] shadow-sm";
+    case "PENDING": return "bg-[hsl(var(--fame-orange))] text-white border-[hsl(var(--fame-orange))] shadow-sm";
+    case "IN_PROGRESS": return "bg-primary text-primary-foreground border-primary shadow-sm";
+    case "CANCELLED": case "REFUNDED": case "FAILED": return "bg-destructive text-destructive-foreground border-destructive shadow-sm";
+    case "PARTIAL": return "bg-yellow-500 text-white border-yellow-500 shadow-sm";
+    case "All": return "bg-foreground text-background border-foreground shadow-sm";
     default: return "bg-muted-foreground text-background border-muted-foreground shadow-sm";
   }
 };
@@ -55,6 +79,9 @@ const AdminOrders = () => {
   }, [search, statusFilter]);
 
   useEffect(() => {
+    const target = observerTarget.current;
+    if (!target) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -63,21 +90,23 @@ const AdminOrders = () => {
       },
       { threshold: 0.1 }
     );
-    if (observerTarget.current) observer.observe(observerTarget.current);
+    observer.observe(target);
     return () => observer.disconnect();
-  }, []);
+  }, [loading, visibleCount]);
+
 
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      // The API returns orders through /api/orders/all
       const { data } = await apiClient.get('/orders/all');
       setOrders(data?.orders || data || []);
     } catch (e) {
-      console.error(e);
+      console.error("Failed to fetch orders:", e);
+      setOrders([]);
       toast({ title: "Failed to load orders", variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => { fetchOrders(); }, []);
@@ -86,13 +115,14 @@ const AdminOrders = () => {
     const matchesStatus = statusFilter === "All" || o.status === statusFilter;
     if (!query) return matchesStatus;
     const q = query.toLowerCase();
-    return matchesStatus && ((o.service || o.service_name)?.toLowerCase().includes(q) || o.link?.toLowerCase().includes(q) || o.id?.includes(q) || (o.username || o.user_id)?.includes(q));
+    return matchesStatus && ((o.service || o.service_name)?.toLowerCase().includes(q) || o.link?.toLowerCase().includes(q) || o.id?.includes(q) || (o.username || o.user_id)?.toLowerCase().includes(q));
   });
 
   const updateStatus = async (id: string, status: string) => {
     try {
+      // Send the actual enum value to the backend
       await apiClient.patch(`/admin/orders/${id}/status`, { status });
-      toast({ title: "Order updated", description: `Status → ${status}` });
+      toast({ title: "Order updated", description: `Status → ${STATUS_LABELS[status] || status}` });
       fetchOrders();
     } catch (e) {
       toast({ title: "Failed to update status", variant: "destructive" });
@@ -147,7 +177,7 @@ const AdminOrders = () => {
                 statusFilter === s ? activeStatusColor(s) : statusColor(s)
               }`}
             >
-              {s}
+              {STATUS_LABELS[s]}
             </button>
           ))}
         </div>
@@ -183,14 +213,14 @@ const AdminOrders = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                    <Badge className={`${statusColor(o.status)} border-none text-xs px-2.5 py-0.5`}>{o.status}</Badge>
+                    <Badge className={`${statusColor(o.status)} border-none text-xs px-2.5 py-0.5`}>{STATUS_LABELS[o.status] || o.status}</Badge>
                     <Select defaultValue={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
                       <SelectTrigger className="h-8 w-28 text-xs rounded-lg border-border"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {STATUSES.filter(s => s !== "All").map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        {STATUSES.filter(s => s !== "All").map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    {!["Refunded", "Cancelled"].includes(o.status) && (
+                    {!["REFUNDED", "CANCELLED"].includes(o.status) && (
                       <button
                         onClick={() => { setRefundOrder(o); setRefundDialog(true); }}
                         className="h-8 px-2.5 rounded-lg bg-destructive/10 text-destructive flex items-center gap-1 hover:bg-destructive/20 transition-all active:scale-95 text-xs"
@@ -237,3 +267,4 @@ const AdminOrders = () => {
 };
 
 export default AdminOrders;
+
