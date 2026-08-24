@@ -162,7 +162,7 @@ const AdminPayments = () => {
                     </TableCell>
                     <TableCell className="font-mono text-xs">{p.transactionId}</TableCell>
                     <TableCell className="text-right">
-                      {!p.is_paid && p.status === 'SUCCESS' && (
+                      {!p.is_paid && (
                         <Button 
                           variant="outline" 
                           size="sm" 
