@@ -72,12 +72,11 @@ const AdminPayments = () => {
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedPayments = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-  const nprCurrency = currencies?.find(c => c.code === 'NPR') || { rate: 134, symbol: 'Rs' };
+  const nprCurrency = currencies?.find(c => c.code === 'NPR') || { rate: 134, symbol: 'Rs.' };
   
   // Use the API provided totals for a more accurate reflection of the entire database
-  // instead of calculating it from the currently fetched paginated list.
   const unpaidCount = apiUnpaidCount;
-  const totalUnpaidNPR = apiTotalAmount;
+  const totalUnpaidNPR = Number(apiTotalAmount) || 0;
 
   return (
     <div className="space-y-6">
@@ -90,7 +89,9 @@ const AdminPayments = () => {
           <div className="h-10 w-px bg-border mx-2 hidden sm:block"></div>
           <div className="flex flex-col rounded-xl border border-orange-500/20 bg-orange-500/5 px-4 py-2 shadow-sm">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-orange-600/80">Pending Action</span>
-            <span className="text-sm font-bold text-orange-600">{unpaidCount} unpaid ({nprCurrency.symbol}{Number(totalUnpaidNPR).toFixed(2)})</span>
+            <span className="text-sm font-bold text-orange-600">
+              {unpaidCount} unpaid ({nprCurrency.symbol} {totalUnpaidNPR.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -122,7 +123,8 @@ const AdminPayments = () => {
                 <TableHead className="text-xs font-medium w-24">Date</TableHead>
                 <TableHead className="text-xs font-medium">User</TableHead>
                 <TableHead className="text-xs font-medium w-32">Amount</TableHead>
-                <TableHead className="text-xs font-medium w-32">Status</TableHead>
+                <TableHead className="text-xs font-medium w-32">Gateway Status</TableHead>
+                <TableHead className="text-xs font-medium w-24">Settlement</TableHead>
                 <TableHead className="text-xs font-medium">Transaction ID</TableHead>
                 <TableHead className="text-xs font-medium text-right w-32">Actions</TableHead>
               </TableRow>
@@ -130,7 +132,7 @@ const AdminPayments = () => {
             <TableBody>
               {paginatedPayments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                     No payment orders found.
                   </TableCell>
                 </TableRow>
@@ -141,7 +143,18 @@ const AdminPayments = () => {
                       {new Date(p.createdAt || p.date).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="font-medium">{typeof p.user === 'string' ? p.user : 'Unknown'}</TableCell>
-                    <TableCell className="font-semibold text-primary">{p.amount} {p.currency || "USD"}</TableCell>
+                    <TableCell className="font-semibold text-primary">
+                      {Number(p.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {p.currency || "NPR"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`text-[10px] ${
+                        p.status === 'SUCCESS' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
+                        p.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 
+                        'bg-red-500/10 text-red-500 border-red-500/20'
+                      }`}>
+                        {p.status || 'PENDING'}
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={`text-[10px] ${p.is_paid ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-orange-500/10 text-orange-500 border-orange-500/20'}`}>
                         {p.is_paid ? 'paid' : 'unpaid'}
@@ -149,7 +162,7 @@ const AdminPayments = () => {
                     </TableCell>
                     <TableCell className="font-mono text-xs">{p.transactionId}</TableCell>
                     <TableCell className="text-right">
-                      {!p.is_paid && (
+                      {!p.is_paid && p.status === 'SUCCESS' && (
                         <Button 
                           variant="outline" 
                           size="sm" 
