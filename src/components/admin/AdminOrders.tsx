@@ -209,7 +209,7 @@ const AdminOrders = () => {
                       {o.smm_order_id && <span>SMM ID: {o.smm_order_id}</span>}
                       <span>Service ID: {o.service_id || o.serviceId || 'N/A'}</span>
                       <span>Provider: {o.provider_name || o.provider || o.providerId || 'N/A'}</span>
-                      <span>User: {o.user?.email || o.username || o.user_id || o.userId || 'N/A'}</span>
+                      <span>User: {o.username && o.username !== 'Unknown' ? o.username : (o.user?.username || o.user?.email || o.user_id || (o.userId ? `User#${o.userId.slice(-6)}` : 'N/A'))}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 flex-wrap">
