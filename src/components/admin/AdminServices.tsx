@@ -9,7 +9,8 @@ import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface Provider {
@@ -32,10 +33,10 @@ interface RemoteService {
   customRate?: number;
 }
 
-function extractPlatform(category: string): string {
-  const l = category.toLowerCase();
+function extractPlatform(text: string): string {
+  const l = (text || "").toLowerCase();
   if (l.includes("instagram")) return "Instagram";
-  if (l.includes("tiktok")) return "TikTok";
+  if (l.includes("tiktok") || l.includes("tik tok")) return "TikTok";
   if (l.includes("youtube")) return "YouTube";
   if (l.includes("facebook")) return "Facebook";
   if (l.includes("twitter") || l.includes("x ")) return "X (Twitter)";
@@ -48,7 +49,19 @@ function extractPlatform(category: string): string {
   if (l.includes("threads")) return "Threads";
   if (l.includes("snapchat")) return "Snapchat";
   if (l.includes("soundcloud")) return "SoundCloud";
+  if (l.includes("pinterest")) return "Pinterest";
+  if (l.includes("reddit")) return "Reddit";
   return "Other";
+}
+
+/** Returns a meaningful category string, falling back to the service name scan when
+ *  the backend has stored 'Unknown', blank, or a pending-sync placeholder. */
+function resolveCategory(category: string, serviceName: string): string {
+  const bad = !category || category.toLowerCase() === "unknown" || category.toLowerCase().includes("pending");
+  if (!bad) return category;
+  // Try to derive from service name
+  const derived = extractPlatform(serviceName);
+  return derived !== "Other" ? derived : (serviceName.split("|")[0]?.trim() || "Other");
 }
 
 const AdminServices = () => {
@@ -84,6 +97,12 @@ const AdminServices = () => {
   const [remoteSelected, setRemoteSelected] = useState<Set<number>>(new Set());
   const [importing, setImporting] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
+
+  // Single-service activation dialog
+  const [activateSingleOpen, setActivateSingleOpen] = useState(false);
+  const [singleService, setSingleService] = useState<RemoteService | null>(null);
+  const [singleForm, setSingleForm] = useState({ name: "", serviceId: "", min: "", max: "", customRate: "", nameEdited: false });
+  const [activatingSingle, setActivatingSingle] = useState(false);
 
   const fetchProviders = async () => {
     try {
@@ -318,6 +337,59 @@ const AdminServices = () => {
     setImporting(false);
   };
 
+  const openActivateSingle = (s: RemoteService) => {
+    setSingleService(s);
+    setSingleForm({
+      name: s.name,
+      serviceId: String(s.service),
+      min: String(s.min),
+      max: String(s.max),
+      customRate: "",
+      nameEdited: false,
+    });
+    setActivateSingleOpen(true);
+  };
+
+  const handleActivateSingle = async () => {
+    if (!singleService || !importProvider) return;
+    const parsedMin = Number(singleForm.min);
+    const parsedMax = Number(singleForm.max);
+    const parsedId = Number(singleForm.serviceId);
+    const customName = singleForm.name.trim();
+    if (!customName || isNaN(parsedMin) || isNaN(parsedMax) || isNaN(parsedId)) {
+      toast({ title: "Invalid fields", description: "Please fill all fields with valid values.", variant: "destructive" });
+      return;
+    }
+    setActivatingSingle(true);
+    try {
+      // Always carry original service's category & type so backend doesn't mark them Unknown.
+      // Send customName + overrideName so backend won't overwrite name on async sync.
+      const parsedCustomRate = singleForm.customRate ? Number(singleForm.customRate) : null;
+      const payload = [{
+        serviceId: parsedId,
+        name: customName,
+        customName: customName,        // explicit override field
+        overrideName: true,            // tell backend: do NOT overwrite name on sync
+        category: singleService.category,
+        rate: parsedCustomRate ?? singleService.rate,
+        min: parsedMin,
+        max: parsedMax,
+        type: singleService.type,
+        ...(parsedCustomRate !== null ? { customRate: parsedCustomRate } : {}),
+      }];
+      await apiClient.post(`/admin/providers/${importProvider}/services/import-bulk`, payload);
+      toast({ title: "Service activated", description: `"${customName}" has been added successfully.` });
+      // Remove from remote list using the ORIGINAL service id (not the potentially-changed parsedId)
+      setRemoteServices(prev => prev.filter(s => s.service !== singleService.service));
+      setActivateSingleOpen(false);
+      setSingleService(null);
+      fetchServices(1);
+    } catch (e: any) {
+      toast({ title: "Activation failed", description: e.message, variant: "destructive" });
+    }
+    setActivatingSingle(false);
+  };
+
   const handleToggleStatus = async (providerId: string, serviceId: number, currentStatus: boolean) => {
     try {
       await apiClient.post(`/admin/providers/${providerId}/services/${serviceId}/toggle`, { status: !currentStatus });
@@ -528,7 +600,7 @@ const AdminServices = () => {
                       {s.name}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                      {s.category}
+                      {resolveCategory(s.category, s.name)}
                     </TableCell>
                     <TableCell className="text-xs font-mono text-muted-foreground">{formatCurrency(Number(s.rate))}</TableCell>
                     <TableCell className="text-xs font-mono font-medium text-emerald-500">{formatCurrency(Number(s.customRate || s.rate))}</TableCell>
@@ -648,6 +720,7 @@ const AdminServices = () => {
                         <TableHead className="text-xs font-medium whitespace-nowrap">Platform</TableHead>
                         <TableHead className="text-xs font-medium whitespace-nowrap">Rate</TableHead>
                         <TableHead className="text-xs font-medium whitespace-nowrap">Min/Max</TableHead>
+                        <TableHead className="text-xs font-medium whitespace-nowrap text-right">Activate</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -668,11 +741,19 @@ const AdminServices = () => {
                           </TableCell>
                           <TableCell className="text-xs font-mono text-muted-foreground whitespace-nowrap">{formatCurrency(Number(s.rate))}</TableCell>
                           <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{s.min}/{s.max}</TableCell>
+                          <TableCell className="text-right">
+                            <button
+                              onClick={() => openActivateSingle(s)}
+                              className="text-[11px] px-3 py-1 rounded-full font-semibold bg-[#00B49F]/10 text-[#00B49F] border border-[#00B49F]/30 hover:bg-[#00B49F]/20 transition-colors whitespace-nowrap"
+                            >
+                              ⚡ Activate
+                            </button>
+                          </TableCell>
                         </TableRow>
                       ))}
                       {filteredRemoteServices.length === 0 && !remoteLoading && (
                         <tr>
-                          <td colSpan={7} className="text-center py-16 text-muted-foreground text-sm">
+                          <td colSpan={8} className="text-center py-16 text-muted-foreground text-sm">
                             No new services found for this provider. They may have all been imported.
                           </td>
                         </tr>
@@ -726,6 +807,97 @@ const AdminServices = () => {
               Apply Adjustment
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Single Service Activation Dialog */}
+      <Dialog open={activateSingleOpen} onOpenChange={(o) => { if (!o) { setActivateSingleOpen(false); setSingleService(null); } }}>
+        <DialogContent className="sm:max-w-md max-w-[calc(100vw-2rem)] bg-card border-border rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">⚡ Activate Service</DialogTitle>
+            <DialogDescription>
+              Customize the name, service ID, min/max quantity, and optional custom rate before activating.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-1">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">
+                Custom Name
+                {!singleForm.nameEdited && (
+                  <span className="ml-2 text-[10px] text-muted-foreground font-normal">(pre-filled — edit to override)</span>
+                )}
+              </Label>
+              <Input
+                value={singleForm.name}
+                onChange={(e) => setSingleForm({ ...singleForm, name: e.target.value, nameEdited: true })}
+                placeholder="Service display name"
+                className="rounded-xl bg-secondary border-border"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Service ID (provider)</Label>
+              <Input
+                type="number"
+                value={singleForm.serviceId}
+                onChange={(e) => {
+                  // Changing service ID only updates the ID — name/min/max stay as-is
+                  setSingleForm(prev => ({ ...prev, serviceId: e.target.value }));
+                }}
+                placeholder="e.g. 1042"
+                className="rounded-xl bg-secondary border-border font-mono"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Min Quantity</Label>
+                <Input
+                  type="number"
+                  value={singleForm.min}
+                  onChange={(e) => setSingleForm({ ...singleForm, min: e.target.value })}
+                  placeholder="e.g. 100"
+                  className="rounded-xl bg-secondary border-border font-mono"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Max Quantity</Label>
+                <Input
+                  type="number"
+                  value={singleForm.max}
+                  onChange={(e) => setSingleForm({ ...singleForm, max: e.target.value })}
+                  placeholder="e.g. 10000"
+                  className="rounded-xl bg-secondary border-border font-mono"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Custom Rate (optional — leave blank to use provider rate)</Label>
+              <Input
+                type="number"
+                step="0.0001"
+                value={singleForm.customRate}
+                onChange={(e) => setSingleForm({ ...singleForm, customRate: e.target.value })}
+                placeholder={`Provider rate: ${singleService ? formatCurrency(Number(singleService.rate)) : ""}`}
+                className="rounded-xl bg-secondary border-border font-mono"
+              />
+            </div>
+            {singleService && (
+              <p className="text-[11px] text-muted-foreground rounded-xl bg-secondary/60 px-3 py-2">
+                Category: <span className="font-medium text-foreground">{singleService.category}</span>
+                &nbsp;·&nbsp; Platform: <span className="font-medium text-foreground">{extractPlatform(singleService.category)}</span>
+                &nbsp;·&nbsp; Type: <span className="font-medium text-foreground">{singleService.type}</span>
+                {singleForm.serviceId !== String(singleService.service) && (
+                  <span className="ml-2 text-amber-500 font-medium">· ID changed — name &amp; category kept from original</span>
+                )}
+              </p>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" className="rounded-xl" onClick={() => { setActivateSingleOpen(false); setSingleService(null); }}>Cancel</Button>
+            <Button className="rounded-xl bg-[#00B49F] hover:bg-[#00B49F]/90 text-white" onClick={handleActivateSingle} disabled={activatingSingle}>
+              {activatingSingle && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Activate Service
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
