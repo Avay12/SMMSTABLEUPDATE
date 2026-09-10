@@ -79,8 +79,9 @@ const SupportPage = () => {
             Important Notice / महत्त्वपूर्ण सूचना
           </p>
           <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-            Before ordering any services, please check first if low rate services are working or not. You can write your support ticket in both English and Nepali. <br/>
-            कुनै पनि सेवाहरू अर्डर गर्नु अघि, कृपया पहिले कम दरका सेवाहरूले काम गरिरहेका छन् वा छैनन् जाँच गर्नुहोस्। तपाईंले आफ्नो टिकट अंग्रेजी र नेपाली दुवै भाषामा लेख्न सक्नुहुन्छ।
+            Payment Ticket Response time 12-24 hours<br/>
+            Order Ticket Response time 0-2 hours<br/>
+            Other or API Ticket Response time 24 hours 
           </p>
         </div>
       </div>
