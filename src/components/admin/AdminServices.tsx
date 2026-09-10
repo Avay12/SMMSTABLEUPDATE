@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useTransition, useCallback, useRef } from
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { apiClient } from "@/lib/apiClient";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Loader2, RefreshCw, Check, X, Download, Package, Trash2, Filter } from "lucide-react";
+import { Search, Loader2, RefreshCw, Check, X, Download, Package, Trash2, Filter, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
@@ -31,6 +31,7 @@ interface RemoteService {
   isActive?: boolean;
   providerId?: string;
   customRate?: number;
+  originalServiceId?: number;
 }
 
 function extractPlatform(text: string): string {
@@ -101,8 +102,21 @@ const AdminServices = () => {
   // Single-service activation dialog
   const [activateSingleOpen, setActivateSingleOpen] = useState(false);
   const [singleService, setSingleService] = useState<RemoteService | null>(null);
-  const [singleForm, setSingleForm] = useState({ name: "", serviceId: "", min: "", max: "", customRate: "", nameEdited: false });
+  const [singleForm, setSingleForm] = useState({ name: "", serviceId: "", originalServiceId: "", min: "", max: "", customRate: "", nameEdited: false });
   const [activatingSingle, setActivatingSingle] = useState(false);
+
+  // Edit active service dialog
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingService, setEditingService] = useState<RemoteService | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    serviceId: "",
+    originalServiceId: "",
+    customRate: "",
+    min: "",
+    max: "",
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const fetchProviders = async () => {
     try {
@@ -315,6 +329,7 @@ const AdminServices = () => {
         .filter((s) => remoteSelected.has(s.service))
         .map((s) => ({
           serviceId: s.service,
+          originalServiceId: s.service,
           name: s.name,
           category: s.category,
           rate: s.rate,
@@ -342,6 +357,7 @@ const AdminServices = () => {
     setSingleForm({
       name: s.name,
       serviceId: String(s.service),
+      originalServiceId: String(s.service),
       min: String(s.min),
       max: String(s.max),
       customRate: "",
@@ -355,8 +371,9 @@ const AdminServices = () => {
     const parsedMin = Number(singleForm.min);
     const parsedMax = Number(singleForm.max);
     const parsedId = Number(singleForm.serviceId);
+    const parsedOriginalId = singleForm.originalServiceId ? Number(singleForm.originalServiceId) : parsedId;
     const customName = singleForm.name.trim();
-    if (!customName || isNaN(parsedMin) || isNaN(parsedMax) || isNaN(parsedId)) {
+    if (!customName || isNaN(parsedMin) || isNaN(parsedMax) || isNaN(parsedId) || isNaN(parsedOriginalId)) {
       toast({ title: "Invalid fields", description: "Please fill all fields with valid values.", variant: "destructive" });
       return;
     }
@@ -367,6 +384,7 @@ const AdminServices = () => {
       const parsedCustomRate = singleForm.customRate ? Number(singleForm.customRate) : null;
       const payload = [{
         serviceId: parsedId,
+        originalServiceId: parsedOriginalId,
         name: customName,
         customName: customName,        // explicit override field
         overrideName: true,            // tell backend: do NOT overwrite name on sync
@@ -388,6 +406,53 @@ const AdminServices = () => {
       toast({ title: "Activation failed", description: e.message, variant: "destructive" });
     }
     setActivatingSingle(false);
+  };
+
+  const openEditModal = (s: RemoteService) => {
+    setEditingService(s);
+    setEditForm({
+      name: s.name || "",
+      serviceId: String(s.service || ""),
+      originalServiceId: String(s.originalServiceId || s.service || ""),
+      customRate: s.customRate !== undefined ? String(s.customRate) : String(s.rate || ""),
+      min: String(s.min || ""),
+      max: String(s.max || ""),
+    });
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingService) return;
+    if (!editingService.providerId) {
+      toast({ title: "Provider ID missing for this service", variant: "destructive" });
+      return;
+    }
+    const parsedMin = editForm.min ? Number(editForm.min) : undefined;
+    const parsedMax = editForm.max ? Number(editForm.max) : undefined;
+    const parsedRate = editForm.customRate ? Number(editForm.customRate) : undefined;
+    const parsedNewServiceId = editForm.serviceId ? Number(editForm.serviceId) : undefined;
+    const customName = editForm.name.trim();
+
+    setSavingEdit(true);
+    try {
+      await apiClient.put(`/admin/providers/${editingService.providerId}/services/${editingService.service}`, {
+        customName: customName || undefined,
+        customRate: parsedRate,
+        customMin: parsedMin,
+        customMax: parsedMax,
+        serviceId: parsedNewServiceId,
+        newServiceId: parsedNewServiceId,
+        originalServiceId: Number(editForm.originalServiceId) || Number(editingService.originalServiceId) || Number(editingService.service),
+      });
+
+      toast({ title: "Service updated successfully" });
+      setEditOpen(false);
+      setEditingService(null);
+      fetchServices(1);
+    } catch (e: any) {
+      toast({ title: "Failed to update service", description: e.message, variant: "destructive" });
+    }
+    setSavingEdit(false);
   };
 
   const handleToggleStatus = async (providerId: string, serviceId: number, currentStatus: boolean) => {
@@ -578,12 +643,13 @@ const AdminServices = () => {
                   <Checkbox checked={selected.size === filteredServices.length && filteredServices.length > 0} onCheckedChange={toggleAll} />
                 </TableHead>
                 <TableHead className="text-xs font-medium whitespace-nowrap">ID</TableHead>
+                <TableHead className="text-xs font-medium whitespace-nowrap">Original ID</TableHead>
                 <TableHead className="text-xs font-medium whitespace-nowrap">Service</TableHead>
                 <TableHead className="text-xs font-medium whitespace-nowrap">Category</TableHead>
                 <TableHead className="text-xs font-medium whitespace-nowrap">Provider Cost</TableHead>
                 <TableHead className="text-xs font-medium whitespace-nowrap">My Price</TableHead>
                 <TableHead className="text-xs font-medium whitespace-nowrap">Provider</TableHead>
-                <TableHead className="text-xs font-medium text-right whitespace-nowrap">Status</TableHead>
+                <TableHead className="text-xs font-medium text-right whitespace-nowrap">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -595,7 +661,10 @@ const AdminServices = () => {
                     <TableCell className="text-center">
                       <Checkbox checked={selected.has(getServiceKey(s.providerId || "", s.service))} onCheckedChange={() => toggleSelect(s.providerId || "", s.service)} />
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{s.service}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground font-mono whitespace-nowrap">{s.service}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground font-mono whitespace-nowrap">
+                      {s.originalServiceId || s.service}
+                    </TableCell>
                     <TableCell className="text-sm font-medium whitespace-nowrap">
                       {s.name}
                     </TableCell>
@@ -614,19 +683,28 @@ const AdminServices = () => {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <button 
-                        onClick={() => handleToggleStatus(s.providerId || "", s.service, s.isActive || false)}
-                        className={`text-xs px-3.5 py-1.5 rounded-full font-semibold transition-colors ${!s.isActive ? "bg-[#015C4B] text-white shadow-sm hover:bg-[#015C4B]/90" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
-                      >
-                        {!s.isActive ? "Active" : "Hidden"}
-                      </button>
+                    <TableCell className="text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => openEditModal(s)}
+                          className="text-xs px-2.5 py-1.5 rounded-full font-semibold border border-border/80 bg-secondary/60 hover:bg-secondary text-foreground transition-colors flex items-center gap-1"
+                          title="Edit Service Details"
+                        >
+                          <Pencil className="h-3 w-3" /> Edit
+                        </button>
+                        <button 
+                          onClick={() => handleToggleStatus(s.providerId || "", s.service, s.isActive || false)}
+                          className={`text-xs px-3.5 py-1.5 rounded-full font-semibold transition-colors ${!s.isActive ? "bg-[#015C4B] text-white shadow-sm hover:bg-[#015C4B]/90" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                        >
+                          {!s.isActive ? "Active" : "Hidden"}
+                        </button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
               {filteredServices.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 text-muted-foreground text-sm">
+                  <td colSpan={9} className="text-center py-16 text-muted-foreground text-sm">
                     No services found. Click "Import Services" to add some.
                   </td>
                 </tr>
@@ -834,18 +912,29 @@ const AdminServices = () => {
                 className="rounded-xl bg-secondary border-border"
               />
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Service ID (provider)</Label>
-              <Input
-                type="number"
-                value={singleForm.serviceId}
-                onChange={(e) => {
-                  // Changing service ID only updates the ID — name/min/max stay as-is
-                  setSingleForm(prev => ({ ...prev, serviceId: e.target.value }));
-                }}
-                placeholder="e.g. 1042"
-                className="rounded-xl bg-secondary border-border font-mono"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Service ID (Your Site)</Label>
+                <Input
+                  type="number"
+                  value={singleForm.serviceId}
+                  onChange={(e) => {
+                    // Changing service ID only updates the ID — name/min/max stay as-is
+                    setSingleForm(prev => ({ ...prev, serviceId: e.target.value }));
+                  }}
+                  placeholder="e.g. 1042"
+                  className="rounded-xl bg-secondary border-border font-mono"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Original ID (Provider)</Label>
+                <Input
+                  type="number"
+                  disabled
+                  value={singleForm.originalServiceId}
+                  className="rounded-xl bg-secondary/50 border-border font-mono cursor-not-allowed opacity-75"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
@@ -896,6 +985,90 @@ const AdminServices = () => {
             <Button className="rounded-xl bg-[#00B49F] hover:bg-[#00B49F]/90 text-white" onClick={handleActivateSingle} disabled={activatingSingle}>
               {activatingSingle && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Activate Service
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Active Service Dialog */}
+      <Dialog open={editOpen} onOpenChange={(o) => { if (!o) { setEditOpen(false); setEditingService(null); } }}>
+        <DialogContent className="sm:max-w-md max-w-[calc(100vw-2rem)] bg-card border-border rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">✏️ Edit Service {editingService?.service}</DialogTitle>
+            <DialogDescription>
+              Customize the name, site service ID, min/max quantities, and your custom selling price.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-1">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Custom Name</Label>
+              <Input
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                placeholder="Service display name"
+                className="rounded-xl bg-secondary border-border"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Service ID (Your Site)</Label>
+                <Input
+                  type="number"
+                  value={editForm.serviceId}
+                  onChange={(e) => setEditForm({ ...editForm, serviceId: e.target.value })}
+                  placeholder="e.g. 1042"
+                  className="rounded-xl bg-secondary border-border font-mono"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Original ID (Provider)</Label>
+                <Input
+                  type="number"
+                  disabled
+                  value={editForm.originalServiceId}
+                  className="rounded-xl bg-secondary/50 border-border font-mono cursor-not-allowed opacity-75"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Min Quantity</Label>
+                <Input
+                  type="number"
+                  value={editForm.min}
+                  onChange={(e) => setEditForm({ ...editForm, min: e.target.value })}
+                  placeholder="e.g. 100"
+                  className="rounded-xl bg-secondary border-border font-mono"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Max Quantity</Label>
+                <Input
+                  type="number"
+                  value={editForm.max}
+                  onChange={(e) => setEditForm({ ...editForm, max: e.target.value })}
+                  placeholder="e.g. 10000"
+                  className="rounded-xl bg-secondary border-border font-mono"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Custom Price ({editingService ? `Cost: ${formatCurrency(Number(editingService.rate))}` : ""})</Label>
+              <Input
+                type="number"
+                step="0.0001"
+                value={editForm.customRate}
+                onChange={(e) => setEditForm({ ...editForm, customRate: e.target.value })}
+                placeholder="Selling rate"
+                className="rounded-xl bg-secondary border-border font-mono"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" className="rounded-xl" onClick={() => { setEditOpen(false); setEditingService(null); }}>Cancel</Button>
+            <Button className="rounded-xl bg-[#00B49F] hover:bg-[#00B49F]/90 text-white" onClick={handleSaveEdit} disabled={savingEdit}>
+              {savingEdit && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
