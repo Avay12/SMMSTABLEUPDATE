@@ -222,7 +222,7 @@ const WalletPage = () => {
         <div className="text-3xl sm:text-4xl font-bold tracking-tight">{formatCurrency(profile?.balance)}</div>
       </div>
 
-      {/* Bonus Banner */}
+      {/* Bonus Banner
       <div className="animate-fade-in [animation-delay:100ms] rounded-xl border border-primary/20 bg-primary/5 p-4 mb-6 flex items-start gap-3 transition-all duration-300 hover:bg-primary/8 hover:border-primary/30">
         <Percent className="h-5 w-5 text-primary shrink-0 mt-0.5 transition-transform duration-300 hover:scale-110" />
         <div>
@@ -235,7 +235,7 @@ const WalletPage = () => {
               : "Bonuses are only available on your first deposit."}
           </p>
         </div>
-      </div>
+      </div> */}
       {/* Important Notice Banner */}
       <div className="animate-fade-in [animation-delay:150ms] rounded-xl border border-primary/20 bg-primary/5 p-4 mb-6 flex items-start gap-3 transition-all duration-300 hover:bg-primary/8 hover:border-primary/30">
         <Info className="h-5 w-5 text-primary shrink-0 mt-0.5 transition-transform duration-300 hover:scale-110" />
@@ -316,16 +316,17 @@ const WalletPage = () => {
         </div>
       )}
 
-      {/* Important Notice Banner */}
-      <div className="animate-fade-in [animation-delay:150ms] rounded-xl border border-primary/20 bg-primary/5 p-4 mb-6 flex items-start gap-3 transition-all duration-300 hover:bg-primary/8 hover:border-primary/30">
-        <Info className="h-5 w-5 text-primary shrink-0 mt-0.5 transition-transform duration-300 hover:scale-110" />
+      {/* Bonus Banner */}
+      <div className="animate-fade-in [animation-delay:100ms] rounded-xl border border-primary/20 bg-primary/5 p-4 mb-6 flex items-start gap-3 transition-all duration-300 hover:bg-primary/8 hover:border-primary/30">
+        <Percent className="h-5 w-5 text-primary shrink-0 mt-0.5 transition-transform duration-300 hover:scale-110" />
         <div>
           <p className="text-sm font-semibold text-foreground">
-            Important Notice / महत्त्वपूर्ण सूचना
+            {isFirstDeposit ? "Bonus on 1st Deposit" : "No Active Bonus"}
           </p>
-          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-            Before ordering any services, please check first if low rate services are working or not. You can write your support ticket in both English and Nepali. <br/>
-            कुनै पनि सेवाहरू अर्डर गर्नु अघि, कृपया पहिले कम दरका सेवाहरूले काम गरिरहेका छन् वा छैनन् जाँच गर्नुहोस्। तपाईंले आफ्नो टिकट अंग्रेजी र नेपाली दुवै भाषामा लेख्न सक्नुहुन्छ।
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {isFirstDeposit
+              ? "10% bonus on your 1st wallet deposit."
+              : "Bonuses are only available on your first deposit."}
           </p>
         </div>
       </div>
