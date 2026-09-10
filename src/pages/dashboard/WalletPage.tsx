@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DollarSign, Shield, Zap, CheckCircle, RefreshCw, Loader2, Copy, Check, ArrowLeft, ArrowRight, MessageCircle, Mail, Phone, Percent } from "lucide-react";
+import { DollarSign, Shield, Zap, CheckCircle, RefreshCw, Loader2, Copy, Check, ArrowLeft, ArrowRight, MessageCircle, Mail, Phone, Percent, Info } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { checkPayment } from "@/lib/oxapay";
 import { QRCodeSVG } from "qrcode.react";
@@ -236,6 +236,19 @@ const WalletPage = () => {
           </p>
         </div>
       </div>
+      {/* Important Notice Banner */}
+      <div className="animate-fade-in [animation-delay:150ms] rounded-xl border border-primary/20 bg-primary/5 p-4 mb-6 flex items-start gap-3 transition-all duration-300 hover:bg-primary/8 hover:border-primary/30">
+        <Info className="h-5 w-5 text-primary shrink-0 mt-0.5 transition-transform duration-300 hover:scale-110" />
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            Important Notice / महत्त्वपूर्ण सूचना
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+            Before ordering any services, please check first if low rate services are working or not. You can write your support ticket in both English and Nepali. <br/>
+            कुनै पनि सेवाहरू अर्डर गर्नु अघि, कृपया पहिले कम दरका सेवाहरूले काम गरिरहेका छन् वा छैनन् जाँच गर्नुहोस्। तपाईंले आफ्नो टिकट अंग्रेजी र नेपाली दुवै भाषामा लेख्न सक्नुहुन्छ।
+          </p>
+        </div>
+      </div>
 
       {/* Step 2: Manual Form */}
       {selectedMethod === "manual" && (
@@ -302,6 +315,20 @@ const WalletPage = () => {
           </div>
         </div>
       )}
+
+      {/* Important Notice Banner */}
+      <div className="animate-fade-in [animation-delay:150ms] rounded-xl border border-primary/20 bg-primary/5 p-4 mb-6 flex items-start gap-3 transition-all duration-300 hover:bg-primary/8 hover:border-primary/30">
+        <Info className="h-5 w-5 text-primary shrink-0 mt-0.5 transition-transform duration-300 hover:scale-110" />
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            Important Notice / महत्त्वपूर्ण सूचना
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+            Before ordering any services, please check first if low rate services are working or not. You can write your support ticket in both English and Nepali. <br/>
+            कुनै पनि सेवाहरू अर्डर गर्नु अघि, कृपया पहिले कम दरका सेवाहरूले काम गरिरहेका छन् वा छैनन् जाँच गर्नुहोस्। तपाईंले आफ्नो टिकट अंग्रेजी र नेपाली दुवै भाषामा लेख्न सक्नुहुन्छ।
+          </p>
+        </div>
+      </div>
 
 
       {/* Payment Details Modal */}

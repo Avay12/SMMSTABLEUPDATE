@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Send, MessageSquare, CheckCircle, Paperclip, X, FileText, Image as ImageIcon } from "lucide-react";
+import { Loader2, Send, MessageSquare, CheckCircle, Paperclip, X, FileText, Image as ImageIcon, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
@@ -70,6 +70,20 @@ const SupportPage = () => {
     <div>
       <h1 className="text-xl sm:text-2xl font-bold mb-1">Support</h1>
       <p className="text-sm text-muted-foreground mb-6 sm:mb-8">Submit a ticket or view your existing tickets</p>
+
+      {/* Important Notice Banner */}
+      <div className="animate-fade-in [animation-delay:100ms] rounded-xl border border-primary/20 bg-primary/5 p-4 mb-6 sm:mb-8 flex items-start gap-3 transition-all duration-300 hover:bg-primary/8 hover:border-primary/30">
+        <Info className="h-5 w-5 text-primary shrink-0 mt-0.5 transition-transform duration-300 hover:scale-110" />
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            Important Notice / महत्त्वपूर्ण सूचना
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+            Before ordering any services, please check first if low rate services are working or not. You can write your support ticket in both English and Nepali. <br/>
+            कुनै पनि सेवाहरू अर्डर गर्नु अघि, कृपया पहिले कम दरका सेवाहरूले काम गरिरहेका छन् वा छैनन् जाँच गर्नुहोस्। तपाईंले आफ्नो टिकट अंग्रेजी र नेपाली दुवै भाषामा लेख्न सक्नुहुन्छ।
+          </p>
+        </div>
+      </div>
 
       <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
         <DialogContent className="max-w-sm text-center">
