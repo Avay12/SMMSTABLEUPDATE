@@ -1,9 +1,9 @@
 // vite.config.ts
-import { defineConfig } from "file:///D:/SocialAsset/Famestablr/node_modules/vite/dist/node/index.js";
-import react from "file:///D:/SocialAsset/Famestablr/node_modules/@vitejs/plugin-react-swc/index.js";
+import { defineConfig } from "file:///D:/SocialAsset/Smmstable/node_modules/vite/dist/node/index.js";
+import react from "file:///D:/SocialAsset/Smmstable/node_modules/@vitejs/plugin-react-swc/index.js";
 import path from "path";
-import { componentTagger } from "file:///D:/SocialAsset/Famestablr/node_modules/lovable-tagger/dist/index.js";
-var __vite_injected_original_dirname = "D:\\SocialAsset\\Famestablr";
+import { componentTagger } from "file:///D:/SocialAsset/Smmstable/node_modules/lovable-tagger/dist/index.js";
+var __vite_injected_original_dirname = "D:\\SocialAsset\\Smmstable";
 var vite_config_default = defineConfig(({ mode }) => ({
   server: {
     host: "::",

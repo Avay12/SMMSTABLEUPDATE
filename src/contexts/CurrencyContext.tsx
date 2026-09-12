@@ -65,7 +65,7 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     // If the user profile has a currency, try to use it.
     // Otherwise fallback to localStorage, then USD.
-    const userCurrencyCode = profile?.currency || localStorage.getItem('famestablr_currency') || 'USD';
+    const userCurrencyCode = profile?.currency || localStorage.getItem('Smmstable_currency') || 'USD';
     const found = currencies.find(c => c.code === userCurrencyCode);
     if (found) {
       setCurrentCurrency(found);
@@ -79,7 +79,7 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
     const found = currencies.find(c => c.code === code);
     if (found) {
       setCurrentCurrency(found);
-      localStorage.setItem('famestablr_currency', code);
+      localStorage.setItem('Smmstable_currency', code);
     }
   };
 

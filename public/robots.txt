@@ -1,5 +1,5 @@
 # Sitemap
-Sitemap: https://famestablr.com/sitemap.xml
+Sitemap: https://Smmstable.com/sitemap.xml
 
 # Allow all crawlers on public pages
 User-agent: Googlebot
