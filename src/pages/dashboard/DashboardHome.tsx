@@ -12,6 +12,7 @@ import { apiClient } from "@/lib/apiClient";
 import { useLocation, useNavigate } from "react-router-dom";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { PAGE_SEO } from "@/lib/seo";
+import OrderRulesNotice from "@/components/dashboard/OrderRulesNotice";
 
 const platformIcons: Record<string, string> = {
   // ... (unchanged part omitted for brevity, let's keep it complete though)
@@ -381,10 +382,18 @@ const DashboardHome = () => {
                 {placing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 Place Order
               </Button>
+
+              <p className="text-[11px] text-center text-muted-foreground pt-1">
+                By placing this order, you agree to the{" "}
+                <span className="text-primary font-semibold">Order Rules & Warnings</span> below.
+              </p>
             </div>
           )}
         </div>
       )}
+
+      {/* Order Rules & Warning Notice */}
+      <OrderRulesNotice className="mt-6" />
     </div>
   );
 };
