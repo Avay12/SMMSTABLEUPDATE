@@ -13,6 +13,7 @@ const resources = {
       needHelp: "Need help? Reach out to us", placeOrder: "Place Order", totalCost: "Total Cost",
       notifications: "Notifications", noNotifications: "No notifications yet", markAllRead: "Mark all read",
       darkMode: "Dark Mode", lightMode: "Light Mode", language: "Language",
+      insufficientBalance: "Insufficient balance",
     },
   },
   es: {
@@ -25,6 +26,7 @@ const resources = {
       needHelp: "¿Necesitas ayuda? Contáctanos", placeOrder: "Realizar Pedido", totalCost: "Costo Total",
       notifications: "Notificaciones", noNotifications: "Sin notificaciones", markAllRead: "Marcar todo leído",
       darkMode: "Modo Oscuro", lightMode: "Modo Claro", language: "Idioma",
+      insufficientBalance: "Saldo insuficiente",
     },
   },
   fr: {
@@ -37,6 +39,7 @@ const resources = {
       needHelp: "Besoin d'aide? Contactez-nous", placeOrder: "Commander", totalCost: "Coût total",
       notifications: "Notifications", noNotifications: "Pas de notifications", markAllRead: "Tout marquer lu",
       darkMode: "Mode sombre", lightMode: "Mode clair", language: "Langue",
+      insufficientBalance: "Solde insuffisant",
     },
   },
   de: {
@@ -49,6 +52,7 @@ const resources = {
       needHelp: "Hilfe benötigt? Kontaktieren Sie uns", placeOrder: "Bestellen", totalCost: "Gesamtkosten",
       notifications: "Benachrichtigungen", noNotifications: "Keine Benachrichtigungen", markAllRead: "Alle gelesen",
       darkMode: "Dunkelmodus", lightMode: "Hellmodus", language: "Sprache",
+      insufficientBalance: "Unzureichendes Guthaben",
     },
   },
   pt: {
@@ -61,6 +65,7 @@ const resources = {
       needHelp: "Precisa de ajuda? Fale conosco", placeOrder: "Fazer Pedido", totalCost: "Custo Total",
       notifications: "Notificações", noNotifications: "Sem notificações", markAllRead: "Marcar tudo lido",
       darkMode: "Modo Escuro", lightMode: "Modo Claro", language: "Idioma",
+      insufficientBalance: "Saldo insuficiente",
     },
   },
   ar: {
@@ -73,6 +78,7 @@ const resources = {
       needHelp: "تحتاج مساعدة؟ تواصل معنا", placeOrder: "تقديم الطلب", totalCost: "التكلفة الإجمالية",
       notifications: "الإشعارات", noNotifications: "لا توجد إشعارات", markAllRead: "تحديد الكل كمقروء",
       darkMode: "الوضع الداكن", lightMode: "الوضع الفاتح", language: "اللغة",
+      insufficientBalance: "الرصيد غير كافٍ",
     },
   },
   hi: {
@@ -85,6 +91,7 @@ const resources = {
       needHelp: "मदद चाहिए? हमसे संपर्क करें", placeOrder: "ऑर्डर दें", totalCost: "कुल लागत",
       notifications: "सूचनाएं", noNotifications: "कोई सूचना नहीं", markAllRead: "सभी पढ़ा हुआ",
       darkMode: "डार्क मोड", lightMode: "लाइट मोड", language: "भाषा",
+      insufficientBalance: "अपर्याप्त शेष राशि",
     },
   },
   zh: {
@@ -97,6 +104,7 @@ const resources = {
       needHelp: "需要帮助？联系我们", placeOrder: "下单", totalCost: "总费用",
       notifications: "通知", noNotifications: "暂无通知", markAllRead: "全部已读",
       darkMode: "深色模式", lightMode: "浅色模式", language: "语言",
+      insufficientBalance: "余额不足",
     },
   },
   ja: {
@@ -109,6 +117,7 @@ const resources = {
       needHelp: "お困りですか？お問い合わせください", placeOrder: "注文する", totalCost: "合計",
       notifications: "通知", noNotifications: "通知はありません", markAllRead: "すべて既読",
       darkMode: "ダークモード", lightMode: "ライトモード", language: "言語",
+      insufficientBalance: "残高不足",
     },
   },
   ko: {
@@ -121,6 +130,7 @@ const resources = {
       needHelp: "도움이 필요하세요?", placeOrder: "주문하기", totalCost: "총 비용",
       notifications: "알림", noNotifications: "알림 없음", markAllRead: "모두 읽음",
       darkMode: "다크 모드", lightMode: "라이트 모드", language: "언어",
+      insufficientBalance: "잔액 부족",
     },
   },
   ru: {
@@ -133,6 +143,7 @@ const resources = {
       needHelp: "Нужна помощь? Свяжитесь с нами", placeOrder: "Заказать", totalCost: "Итого",
       notifications: "Уведомления", noNotifications: "Нет уведомлений", markAllRead: "Прочитать все",
       darkMode: "Тёмная тема", lightMode: "Светлая тема", language: "Язык",
+      insufficientBalance: "Недостаточный баланс",
     },
   },
   tr: {
@@ -145,6 +156,7 @@ const resources = {
       needHelp: "Yardıma mı ihtiyacınız var?", placeOrder: "Sipariş Ver", totalCost: "Toplam",
       notifications: "Bildirimler", noNotifications: "Bildirim yok", markAllRead: "Tümünü okundu",
       darkMode: "Karanlık Mod", lightMode: "Aydınlık Mod", language: "Dil",
+      insufficientBalance: "Yetersiz bakiye",
     },
   },
   it: {
@@ -157,6 +169,7 @@ const resources = {
       needHelp: "Hai bisogno di aiuto?", placeOrder: "Ordina", totalCost: "Costo Totale",
       notifications: "Notifiche", noNotifications: "Nessuna notifica", markAllRead: "Segna tutto letto",
       darkMode: "Modalità scura", lightMode: "Modalità chiara", language: "Lingua",
+      insufficientBalance: "Saldo insufficiente",
     },
   },
   nl: {
@@ -169,6 +182,7 @@ const resources = {
       needHelp: "Hulp nodig?", placeOrder: "Bestellen", totalCost: "Totale Kosten",
       notifications: "Meldingen", noNotifications: "Geen meldingen", markAllRead: "Alles gelezen",
       darkMode: "Donkere modus", lightMode: "Lichte modus", language: "Taal",
+      insufficientBalance: "Onvoldoende saldo",
     },
   },
   pl: {
@@ -181,6 +195,7 @@ const resources = {
       needHelp: "Potrzebujesz pomocy?", placeOrder: "Zamów", totalCost: "Koszt Całkowity",
       notifications: "Powiadomienia", noNotifications: "Brak powiadomień", markAllRead: "Oznacz przeczytane",
       darkMode: "Tryb ciemny", lightMode: "Tryb jasny", language: "Język",
+      insufficientBalance: "Niewystarczające saldo",
     },
   },
   th: {
@@ -193,6 +208,7 @@ const resources = {
       needHelp: "ต้องการความช่วยเหลือ?", placeOrder: "สั่งซื้อ", totalCost: "ราคารวม",
       notifications: "การแจ้งเตือน", noNotifications: "ไม่มีการแจ้งเตือน", markAllRead: "อ่านทั้งหมด",
       darkMode: "โหมดมืด", lightMode: "โหมดสว่าง", language: "ภาษา",
+      insufficientBalance: "ยอดเงินไม่เพียงพอ",
     },
   },
   vi: {
@@ -205,6 +221,7 @@ const resources = {
       needHelp: "Cần giúp đỡ?", placeOrder: "Đặt hàng", totalCost: "Tổng chi phí",
       notifications: "Thông báo", noNotifications: "Chưa có thông báo", markAllRead: "Đánh dấu đã đọc",
       darkMode: "Chế độ tối", lightMode: "Chế độ sáng", language: "Ngôn ngữ",
+      insufficientBalance: "Số dư không đủ",
     },
   },
   id: {
@@ -217,6 +234,7 @@ const resources = {
       needHelp: "Butuh bantuan?", placeOrder: "Pesan", totalCost: "Total Biaya",
       notifications: "Notifikasi", noNotifications: "Belum ada notifikasi", markAllRead: "Tandai semua dibaca",
       darkMode: "Mode Gelap", lightMode: "Mode Terang", language: "Bahasa",
+      insufficientBalance: "Saldo tidak mencukupi",
     },
   },
   uk: {
@@ -229,6 +247,7 @@ const resources = {
       needHelp: "Потрібна допомога?", placeOrder: "Замовити", totalCost: "Загальна вартість",
       notifications: "Сповіщення", noNotifications: "Немає сповіщень", markAllRead: "Прочитати все",
       darkMode: "Темна тема", lightMode: "Світла тема", language: "Мова",
+      insufficientBalance: "Недостатній баланс",
     },
   },
   bn: {
@@ -241,6 +260,7 @@ const resources = {
       needHelp: "সাহায্য দরকার?", placeOrder: "অর্ডার দিন", totalCost: "মোট খরচ",
       notifications: "বিজ্ঞপ্তি", noNotifications: "কোনো বিজ্ঞপ্তি নেই", markAllRead: "সব পঠিত",
       darkMode: "ডার্ক মোড", lightMode: "লাইট মোড", language: "ভাষা",
+      insufficientBalance: "অপর্যাপ্ত ব্যালেন্স",
     },
   },
 };

@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Globe, Clock, HelpCircle, Code, MessageSquare, Settings, Headphones, Trophy, Info, LogOut, Plus, Menu, X, Shield, DollarSign, Send } from "lucide-react";
+import { LayoutDashboard, Globe, Clock, HelpCircle, Code, MessageSquare, Settings, Headphones, Trophy, Info, LogOut, Plus, Menu, X, Shield, DollarSign, Send, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -10,10 +10,12 @@ import logo from "@/assets/logo.png";
 
 const DashboardLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { profile, isAdmin, signOut } = useAuth();
+  const { profile, isAdmin, signOut, loading } = useAuth();
   const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  const isZeroBalance = !loading && (profile?.balance ?? 0) <= 0;
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -50,14 +52,36 @@ const DashboardLayout = () => {
           </span>
         </div>
 
-        <Link to="/dashboard/add-funds" className="block rounded-xl bg-gradient-to-br from-secondary to-muted p-4 mb-6 hover:from-muted hover:to-secondary transition-all duration-300 group" onClick={onNav}>
+        <Link
+          to="/dashboard/add-funds"
+          className={`block rounded-xl p-4 mb-6 transition-all duration-300 group ${
+            isZeroBalance
+              ? "bg-red-500/10 dark:bg-red-950/25 border border-red-500/30 hover:border-red-500/50 hover:bg-red-500/15"
+              : "bg-gradient-to-br from-secondary to-muted hover:from-muted hover:to-secondary"
+          }`}
+          onClick={onNav}
+        >
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{t("balance")}</div>
           <div className="flex items-center justify-between mt-1">
-            <span className="text-lg font-bold">{formatCurrency(profile?.balance || 0)}</span>
-            <span className="h-8 w-8 rounded-full bg-primary flex items-center justify-center group-hover:glow-violet-sm transition-shadow duration-300">
-              <Plus className="h-3.5 w-3.5 text-primary-foreground" />
+            <span className={`text-lg font-bold ${isZeroBalance ? "text-red-600 dark:text-red-400" : ""}`}>
+              {formatCurrency(profile?.balance || 0)}
+            </span>
+            <span
+              className={`h-8 w-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                isZeroBalance
+                  ? "bg-red-500 text-white shadow-sm shadow-red-500/25 group-hover:bg-red-600 group-hover:scale-105"
+                  : "bg-primary text-primary-foreground group-hover:glow-violet-sm"
+              }`}
+            >
+              <Plus className="h-3.5 w-3.5" />
             </span>
           </div>
+          {isZeroBalance && (
+            <div className="mt-2.5 py-1.5 px-2.5 rounded-lg bg-red-500/15 border border-red-500/30 flex items-center justify-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-500" />
+              <span>{t("insufficientBalance", "Insufficient balance")}</span>
+            </div>
+          )}
         </Link>
       </div>
 
