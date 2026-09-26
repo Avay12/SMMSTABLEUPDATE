@@ -1,16 +1,16 @@
 # Sitemap
-Sitemap: https://Smmstable.com/sitemap.xml
+Sitemap: https://smmstable.com/sitemap.xml
 
 # Allow all crawlers on public pages
 User-agent: Googlebot
 Allow: /
-Disallow: /dashboard
-Disallow: /oauth
+Disallow: /dashboard/
+Disallow: /oauth/
 
 User-agent: Bingbot
 Allow: /
-Disallow: /dashboard
-Disallow: /oauth
+Disallow: /dashboard/
+Disallow: /oauth/
 
 User-agent: Twitterbot
 Allow: /
@@ -20,5 +20,5 @@ Allow: /
 
 User-agent: *
 Allow: /
-Disallow: /dashboard
-Disallow: /oauth
+Disallow: /dashboard/
+Disallow: /oauth/

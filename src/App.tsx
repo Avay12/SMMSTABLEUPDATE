@@ -29,6 +29,7 @@ import ApiPage from "./pages/dashboard/ApiPage.tsx";
 import AboutPage from "./pages/dashboard/AboutPage.tsx";
 import AdminPage from "./pages/dashboard/AdminPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import PublicLayout from "./components/layout/PublicLayout.tsx";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,14 @@ const App = () => (
                 <Route path="/oauth/callback" element={<OAuthCallback />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+
+                {/* Public SEO & navigational landing pages for Google search & sitelinks */}
+                <Route path="/services" element={<PublicLayout><ServicesPage /></PublicLayout>} />
+                <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
+                <Route path="/how-to-use" element={<PublicLayout><HowToUsePage /></PublicLayout>} />
+                <Route path="/api" element={<PublicLayout><ApiPage /></PublicLayout>} />
+                <Route path="/support" element={<PublicLayout><SupportPage /></PublicLayout>} />
+
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                   <Route index element={<DashboardHome />} />
                   <Route path="payment-success" element={<PaymentSuccess />} />

@@ -49,10 +49,12 @@ const Navbar = () => {
           </span>
         </button>
 
-        <div className="hidden items-center gap-8 md:flex">
-          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
-          <a href="#services" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Services</a>
-          <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
+        <div className="hidden items-center gap-6 md:flex">
+          <Link to="/services" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Services</Link>
+          <Link to="/how-to-use" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</Link>
+          <Link to="/api" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API</Link>
+          <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">About Us</Link>
+          <a href="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
         </div>
 
         <div className="hidden md:flex items-center gap-3">
@@ -115,10 +117,12 @@ const Navbar = () => {
         <div className="md:hidden fixed inset-0 top-14 z-50 bg-background animate-fade-in">
           <div className="flex flex-col h-full px-6 pt-8 pb-10">
             <nav className="flex flex-col gap-2 flex-1">
-              <a href="#features" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-4 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">Features</a>
-              <a href="#services" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-4 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">Services</a>
-              <a href="#how-it-works" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-4 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">How It Works</a>
-              <a href="https://t.me/smmstable" target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-4 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">Telegram</a>
+              <Link to="/services" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-3 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">Services & Pricing</Link>
+              <Link to="/how-to-use" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-3 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">How It Works</Link>
+              <Link to="/api" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-3 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">API Portal</Link>
+              <Link to="/about" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-3 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">About Us</Link>
+              <a href="/#features" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-3 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">Features</a>
+              <a href="https://t.me/smmstable" target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-3 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">Telegram Support</a>
             </nav>
             <div className="flex flex-col gap-3 pt-6">
               <Link to="/auth?mode=signup" onClick={() => setMobileOpen(false)} className="block">

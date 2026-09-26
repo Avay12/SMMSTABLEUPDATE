@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
 const Footer = () => {
@@ -14,12 +15,14 @@ const Footer = () => {
             <span className="text-foreground">Smm</span><span className="text-gradient-premium">stable</span>
           </span>
         </button>
-        <div className="flex flex-wrap items-center justify-center gap-5 md:gap-6">
-          <a href="#features" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Features</a>
-          <a href="#services" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Services</a>
-          <a href="#how-it-works" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">How It Works</a>
-          <a href="mailto:support@smmstable.com" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">support@smmstable.com</a>
-          <a href="tel:+16414358478" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">+1 (641) 435-8478</a>
+        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
+          <Link to="/services" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Services & Pricing</Link>
+          <Link to="/how-to-use" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">How It Works</Link>
+          <Link to="/api" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">API Docs</Link>
+          <Link to="/about" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">About Us</Link>
+          <Link to="/auth?mode=signup" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Sign Up</Link>
+          <Link to="/support" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Support</Link>
+          <a href="mailto:support@smmstable.com" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Email</a>
           <a href="https://t.me/smmstable" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Telegram</a>
           <a href="https://instagram.com/smmstable" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Instagram</a>
           <a href="https://facebook.com/smmstable" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Facebook</a>
