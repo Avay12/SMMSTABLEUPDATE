@@ -238,7 +238,75 @@ const WalletPage = () => {
           </p>
         </div>
       </div> */}
-      {/* Payment Guide & Promo Code Info Box (Bilingual: English & Nepali with live toggle & mobile responsive design) */}
+ 
+
+      {/* Step 2: Manual Form */}
+      {selectedMethod === "manual" && (
+        <div className="mb-6 animate-fade-in">
+          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 transition-all duration-300 hover:shadow-[0_4px_20px_-6px_hsl(var(--foreground)/0.08)]">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-10 w-10 rounded-xl bg-[hsl(var(--fame-orange))]/10 flex items-center justify-center text-lg transition-transform duration-300 hover:scale-110 hover:rotate-6"><DollarSign className="h-5 w-5" /></div>
+              <div>
+                <h2 className="font-semibold">Manual Transfer</h2>
+                <p className="text-xs text-muted-foreground">Send payment via local gateway</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label>Amount (NPR)</Label>
+                <div className="relative mt-1.5">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">Rs</span>
+                  <Input placeholder="Enter amount (min Rs150)" className="pl-7 bg-secondary border-border h-12 transition-all duration-200 focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]" type="number" min={150} step="1" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                </div>
+              </div>
+              
+              <div>
+                <Label>Mobile Number</Label>
+                <Input placeholder="Enter your mobile number" className="bg-secondary border-border h-12 transition-all duration-200 focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] mt-1.5" type="tel" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} />
+              </div>
+              
+              <div>
+                <Label>Promo Code (Optional)</Label>
+                <Input placeholder="Enter promo code" className="bg-secondary border-border h-12 transition-all duration-200 focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] mt-1.5" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} />
+              </div>
+
+              {/* Bonus Preview */}
+              {parsedAmount >= 150 && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 animate-scale-in">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Deposit Amount</span>
+                    <span className="font-medium">Rs {parsedAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <span className="text-primary font-medium flex items-center gap-1">
+                      <Percent className="h-3.5 w-3.5" /> Bonus ({cryptoBonus.percent}%)
+                    </span>
+                    <span className="text-primary font-semibold">+Rs {cryptoBonus.amount.toFixed(2)}</span>
+                  </div>
+                  <div className="border-t border-border mt-2 pt-2 flex items-center justify-between text-sm font-bold">
+                    <span>Total Credit</span>
+                    <span>Rs {(parsedAmount + cryptoBonus.amount).toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end text-xs text-muted-foreground pt-1 mb-2">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> Secure</span>
+                  <span className="flex items-center gap-1"><Zap className="h-3 w-3" /> Instant</span>
+                  <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Local Gateway</span>
+                </div>
+              </div>
+              <Button onClick={handleCreate} disabled={creating} className="w-full h-12 transition-all duration-200 hover:shadow-lg hover:-translate-y-px active:scale-[0.97]">
+                {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Proceed to Pay
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+     {/* Payment Guide & Promo Code Info Box (Bilingual: English & Nepali with live toggle & mobile responsive design) */}
       <div className="animate-fade-in [animation-delay:150ms] rounded-2xl border border-primary/20 bg-card/60 backdrop-blur-sm p-3.5 sm:p-5 md:p-6 mb-5 sm:mb-6 shadow-sm overflow-hidden">
         {/* Header with Title, Collapse Toggle, and Language Switcher */}
         <div className="flex flex-col gap-3 pb-3 sm:pb-4 border-b border-border/60">
@@ -555,71 +623,6 @@ const WalletPage = () => {
         )}
       </div>
 
-      {/* Step 2: Manual Form */}
-      {selectedMethod === "manual" && (
-        <div className="mb-6 animate-fade-in">
-          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 transition-all duration-300 hover:shadow-[0_4px_20px_-6px_hsl(var(--foreground)/0.08)]">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="h-10 w-10 rounded-xl bg-[hsl(var(--fame-orange))]/10 flex items-center justify-center text-lg transition-transform duration-300 hover:scale-110 hover:rotate-6"><DollarSign className="h-5 w-5" /></div>
-              <div>
-                <h2 className="font-semibold">Manual Transfer</h2>
-                <p className="text-xs text-muted-foreground">Send payment via local gateway</p>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <Label>Amount (NPR)</Label>
-                <div className="relative mt-1.5">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">Rs</span>
-                  <Input placeholder="Enter amount (min Rs150)" className="pl-7 bg-secondary border-border h-12 transition-all duration-200 focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]" type="number" min={150} step="1" value={amount} onChange={(e) => setAmount(e.target.value)} />
-                </div>
-              </div>
-              
-              <div>
-                <Label>Mobile Number</Label>
-                <Input placeholder="Enter your mobile number" className="bg-secondary border-border h-12 transition-all duration-200 focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] mt-1.5" type="tel" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} />
-              </div>
-              
-              <div>
-                <Label>Promo Code (Optional)</Label>
-                <Input placeholder="Enter promo code" className="bg-secondary border-border h-12 transition-all duration-200 focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] mt-1.5" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} />
-              </div>
-
-              {/* Bonus Preview */}
-              {parsedAmount >= 150 && (
-                <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 animate-scale-in">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Deposit Amount</span>
-                    <span className="font-medium">Rs {parsedAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm mt-1">
-                    <span className="text-primary font-medium flex items-center gap-1">
-                      <Percent className="h-3.5 w-3.5" /> Bonus ({cryptoBonus.percent}%)
-                    </span>
-                    <span className="text-primary font-semibold">+Rs {cryptoBonus.amount.toFixed(2)}</span>
-                  </div>
-                  <div className="border-t border-border mt-2 pt-2 flex items-center justify-between text-sm font-bold">
-                    <span>Total Credit</span>
-                    <span>Rs {(parsedAmount + cryptoBonus.amount).toFixed(2)}</span>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center justify-end text-xs text-muted-foreground pt-1 mb-2">
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> Secure</span>
-                  <span className="flex items-center gap-1"><Zap className="h-3 w-3" /> Instant</span>
-                  <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Local Gateway</span>
-                </div>
-              </div>
-              <Button onClick={handleCreate} disabled={creating} className="w-full h-12 transition-all duration-200 hover:shadow-lg hover:-translate-y-px active:scale-[0.97]">
-                {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Proceed to Pay
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
           {/* Important Notice Banner */}
       <div className="animate-fade-in [animation-delay:150ms] rounded-xl border border-primary/20 bg-primary/5 p-4 mb-6 flex items-start gap-3 transition-all duration-300 hover:bg-primary/8 hover:border-primary/30">
