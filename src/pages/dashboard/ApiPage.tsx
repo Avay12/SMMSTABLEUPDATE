@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Copy, Check, Code, Eye, EyeOff, RefreshCw, Play, Loader2,
-  Wallet, ShoppingCart, Search, List, AlertTriangle, BookOpen, ChevronRight, Key, Shield, Trash2
+  Wallet, ShoppingCart, Search, List, AlertTriangle, BookOpen, ChevronRight, Key, Shield, Trash2,
+  LogIn, UserPlus
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,7 +18,7 @@ type EndpointKey = "balance" | "services" | "add" | "status";
 
 const ApiPage = () => {
   useDocumentMeta(PAGE_SEO.api);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [copied, setCopied] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
   const [activeSection, setActiveSection] = useState<EndpointKey>("balance");
@@ -37,7 +39,11 @@ const ApiPage = () => {
 
   // Load existing API key from database
   useEffect(() => {
-    if (!user?.id) return;
+    if (authLoading) return;
+    if (!user?.id) {
+      setApiKeyLoading(false);
+      return;
+    }
     const loadKey = async () => {
       setApiKeyLoading(true);
       try {
@@ -45,11 +51,12 @@ const ApiPage = () => {
         if (response.data?.apiKey) setApiKey(response.data.apiKey);
       } catch (err) {
         console.error("Failed to load API key", err);
+      } finally {
+        setApiKeyLoading(false);
       }
-      setApiKeyLoading(false);
     };
     loadKey();
-  }, [user?.id]);
+  }, [user?.id, authLoading]);
 
   const generateApiKey = () => {
     const rand = crypto.getRandomValues(new Uint8Array(24));
@@ -353,7 +360,41 @@ console.log(data);`;
               </div>
             </div>
 
-            {apiKeyLoading ? (
+            {!user ? (
+              <div className="text-center py-6 px-4">
+                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <Key className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-base mb-1.5">Sign In to Access Your API Key</h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto mb-5 leading-relaxed">
+                  You must be logged in to generate and manage your secret API credentials. Create a free account or sign in to start automating your orders.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Link to="/auth?mode=login">
+                    <Button variant="outline" className="gap-2 rounded-xl h-10 px-5">
+                      <LogIn className="h-4 w-4" /> Sign In
+                    </Button>
+                  </Link>
+                  <Link to="/auth?mode=signup">
+                    <Button className="gap-2 rounded-xl h-10 px-5 bg-gradient-primary">
+                      <UserPlus className="h-4 w-4" /> Create Free Account
+                    </Button>
+                  </Link>
+                </div>
+                <div className="mt-6 pt-5 border-t border-border/50 text-left">
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">API Base Endpoint</label>
+                  <div className="flex gap-2">
+                    <Input className="bg-secondary border-border font-mono text-xs h-11 flex-1" value={API_URL} readOnly />
+                    <Button variant="outline" size="icon" onClick={() => copyText(API_URL, "url")} className="h-11 w-11 shrink-0">
+                      {copied === "url" ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-2">
+                    All reseller requests use <code className="font-mono bg-background px-1 py-0.5 rounded text-[10px]">POST https://smmstable.com/api</code> with JSON payload or <code className="font-mono bg-background px-1 py-0.5 rounded text-[10px]">x-api-key</code> header.
+                  </p>
+                </div>
+              </div>
+            ) : apiKeyLoading ? (
               <div className="flex items-center gap-2 py-4">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Loading your API key...</span>
@@ -363,7 +404,8 @@ console.log(data);`;
                 <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
                   <Key className="h-6 w-6 text-primary" />
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">Generate an API key to start making requests</p>
+                <h3 className="font-semibold text-base mb-1">No API Key Generated Yet</h3>
+                <p className="text-sm text-muted-foreground mb-4">Generate your secret API key to start making requests</p>
                 <Button onClick={handleGenerateKey} disabled={generating} className="gap-2">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
                   Generate API Key

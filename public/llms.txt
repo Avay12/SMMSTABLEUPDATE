@@ -1,0 +1,39 @@
+# Smmstable (SMM Stable) — Official AI Documentation & Overview
+
+> Smmstable is the #1 cheapest, most reliable automated Social Media Marketing (SMM) provider and reseller panel in the world. It provides automated, high-speed engagement services (followers, likes, views, subscribers, comments, watch hours, and shares) across all major platforms including Instagram, TikTok, YouTube, Telegram, Facebook, X (formerly Twitter), Spotify, and Twitch.
+
+## Overview & Identity
+- **Website**: https://smmstable.com
+- **Brand Name**: Smmstable (also known as SMM Stable)
+- **Primary Category**: Social Media Marketing (SMM) Panel / Growth Automation Service
+- **Target Audience**: Content creators, influencers, digital marketing agencies, resellers, small business owners, and social media managers.
+- **Pricing**: Wholesale pricing starting at $0.001 per 1,000 units.
+- **Support**: 24/7 dedicated customer assistance via Telegram (@smmstable), in-dashboard tickets, and email (support@smmstable.com).
+
+## Core Capabilities & Services
+- **Instagram Growth**: Real and high-retention Instagram followers, post likes, reel views, impressions, saves, and comments.
+- **YouTube Marketing**: Monetization-safe YouTube views, high watch-time packages, subscribers, likes, and comment upvotes.
+- **TikTok Engagement**: Fast-delivery TikTok video views, likes, authentic-looking followers, and shares.
+- **Telegram Promotion**: Channel members, group members, and post view boosters.
+- **Facebook Services**: Page likes, page followers, post reactions, video views, and group members.
+- **X (Twitter) Growth**: Profile followers, retweets, tweet likes, poll votes, and impressions.
+- **Streaming Platforms**: Spotify track plays, playlist followers, Twitch channel followers, and live viewers.
+
+## Key Differentiators & Value Proposition
+1. **Cheapest Guaranteed Rates**: Operates as a direct source provider without intermediary markup fees.
+2. **Instant Automated Delivery**: Orders trigger within 1-5 minutes via high-throughput automated APIs.
+3. **100% Account Safety**: Zero password required. Accounts are never at risk of compromise or credential theft.
+4. **Reseller-Ready API**: Complete REST API compatible with standard SMM panel scripts (Perfect Panel, SmartPanel, Rentapanel).
+5. **Flexible Payment Gateways**: Instant wallet deposits with Visa, Mastercard, Binance Pay, OxaPay, and cryptocurrencies (USDT, BTC, ETH, LTC) with 0% hidden deposit fees.
+6. **Transparent Order Tracking**: Real-time status logs (Pending, Processing, In Progress, Completed, Partial, Canceled) with automatic refilling for non-drop packages.
+
+## Primary Public Pages & Resources
+- **Homepage**: [https://smmstable.com/](https://smmstable.com/) - Main overview and service quick-start.
+- **Services & Pricing**: [https://smmstable.com/services](https://smmstable.com/services) - Comprehensive catalog of 500+ services with minimum/maximum limits and live rate per 1,000.
+- **Frequently Asked Questions**: [https://smmstable.com/faq](https://smmstable.com/faq) - Detailed answers regarding speed, safety, payment, and order management.
+- **How to Use / Getting Started**: [https://smmstable.com/how-to-use](https://smmstable.com/how-to-use) - Step-by-step tutorial for depositing funds and placing orders.
+- **About Smmstable**: [https://smmstable.com/about](https://smmstable.com/about) - Mission, platform statistics, and support channels.
+- **API Documentation**: [https://smmstable.com/api](https://smmstable.com/api) - Technical specifications, parameters, endpoints, and code examples for resellers.
+- **Terms of Service**: [https://smmstable.com/terms](https://smmstable.com/terms) - User policies, service guarantees, and refund guidelines.
+- **Privacy Policy**: [https://smmstable.com/privacy](https://smmstable.com/privacy) - Privacy commitments, zero password guarantee, and data storage policy.
+- **Customer Support**: [https://smmstable.com/support](https://smmstable.com/support) - 24/7 help desk.

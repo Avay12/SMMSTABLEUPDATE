@@ -86,9 +86,24 @@ export const PAGE_SEO = {
       "Earn rewards and unlock exclusive discounts with Smmstable's loyalty program. The more you order, the more you save.",
   },
   about: {
-    title: "About Smmstable — Trusted SMM Panel",
+    title: "About Smmstable — #1 Trusted SMM Provider & Growth Platform",
     description:
-      "Learn about Smmstable, the most trusted SMM panel. Our mission, team, and commitment to delivering real social media growth with 24/7 support.",
+      "Learn about Smmstable, the most trusted and affordable SMM panel. Discover our automated infrastructure, 24/7 customer support, and safe social media growth services.",
+  },
+  faq: {
+    title: "Frequently Asked Questions — Smmstable SMM Panel FAQ",
+    description:
+      "Find answers to common questions about Smmstable. Learn about delivery speed, account safety, payment methods, non-drop guarantees, and reseller API integration.",
+  },
+  terms: {
+    title: "Terms of Service — Smmstable SMM Panel",
+    description:
+      "Read the Terms of Service for Smmstable. Understand our service delivery policies, wallet balance conditions, refund terms, and API usage guidelines.",
+  },
+  privacy: {
+    title: "Privacy Policy — Smmstable Secure SMM Services",
+    description:
+      "Read Smmstable's Privacy Policy. We never ask for account passwords, utilize bank-grade encryption, and maintain strict data privacy standards.",
   },
   admin: {
     title: "Admin Panel — Smmstable",

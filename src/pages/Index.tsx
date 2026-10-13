@@ -7,6 +7,8 @@ import PaymentMethodsSection from "@/components/landing/PaymentMethodsSection";
 import SocialProofSection from "@/components/landing/SocialProofSection";
 import CTASection from "@/components/landing/CTASection";
 import Footer from "@/components/landing/Footer";
+import OverviewSection from "@/components/landing/OverviewSection";
+import FAQSection from "@/components/landing/FAQSection";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { PAGE_SEO } from "@/lib/seo";
 
@@ -19,10 +21,12 @@ const Index = () => {
       <main>
         <HeroSection />
         <PaymentMethodsSection />
+        <OverviewSection />
         <FeaturesSection />
         <HowItWorks />
         <PlatformsSection />
         <SocialProofSection />
+        <FAQSection />
         <CTASection />
       </main>
       <Footer />

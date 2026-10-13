@@ -28,6 +28,9 @@ import LoyaltyPage from "./pages/dashboard/LoyaltyPage.tsx";
 import ApiPage from "./pages/dashboard/ApiPage.tsx";
 import AboutPage from "./pages/dashboard/AboutPage.tsx";
 import AdminPage from "./pages/dashboard/AdminPage.tsx";
+import FaqPage from "./pages/public/FaqPage.tsx";
+import TermsPage from "./pages/public/TermsPage.tsx";
+import PrivacyPage from "./pages/public/PrivacyPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PublicLayout from "./components/layout/PublicLayout.tsx";
 import { Loader2 } from "lucide-react";
@@ -62,9 +65,12 @@ const App = () => (
                 {/* Public SEO & navigational landing pages for Google search & sitelinks */}
                 <Route path="/services" element={<PublicLayout><ServicesPage /></PublicLayout>} />
                 <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
+                <Route path="/faq" element={<PublicLayout><FaqPage /></PublicLayout>} />
                 <Route path="/how-to-use" element={<PublicLayout><HowToUsePage /></PublicLayout>} />
                 <Route path="/api" element={<PublicLayout><ApiPage /></PublicLayout>} />
                 <Route path="/support" element={<PublicLayout><SupportPage /></PublicLayout>} />
+                <Route path="/terms" element={<PublicLayout><TermsPage /></PublicLayout>} />
+                <Route path="/privacy" element={<PublicLayout><PrivacyPage /></PublicLayout>} />
 
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                   <Route index element={<DashboardHome />} />
@@ -81,6 +87,9 @@ const App = () => (
                   <Route path="support" element={<SupportPage />} />
                   <Route path="loyalty" element={<LoyaltyPage />} />
                   <Route path="about" element={<AboutPage />} />
+                  <Route path="faq" element={<FaqPage />} />
+                  <Route path="terms" element={<TermsPage />} />
+                  <Route path="privacy" element={<PrivacyPage />} />
                   <Route path="admin" element={<AdminPage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />

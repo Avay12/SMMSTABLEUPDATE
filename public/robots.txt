@@ -1,23 +1,56 @@
-# Sitemap
+# Sitemap & AI Documentation
 Sitemap: https://smmstable.com/sitemap.xml
+# LLM Information: https://smmstable.com/llms.txt
 
-# Allow all crawlers on public pages
+# Googlebot & Google AI Crawlers
 User-agent: Googlebot
 Allow: /
 Disallow: /dashboard/
 Disallow: /oauth/
 
+# Google-Extended (Used by Google Gemini & AI Search Summaries)
+User-agent: Google-Extended
+Allow: /
+Disallow: /dashboard/
+Disallow: /oauth/
+
+# Bing & Copilot
 User-agent: Bingbot
 Allow: /
 Disallow: /dashboard/
 Disallow: /oauth/
 
+# Perplexity AI Crawler
+User-agent: PerplexityBot
+Allow: /
+Disallow: /dashboard/
+Disallow: /oauth/
+
+# OpenAI Search & ChatGPT Crawlers
+User-agent: GPTBot
+Allow: /
+Disallow: /dashboard/
+Disallow: /oauth/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /dashboard/
+Disallow: /oauth/
+
+# Anthropic Claude Crawler
+User-agent: ClaudeBot
+Allow: /
+Disallow: /dashboard/
+Disallow: /oauth/
+
+# Social Media Preview Crawlers
 User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
 Allow: /
 
+# General Default Crawlers
 User-agent: *
 Allow: /
 Disallow: /dashboard/

@@ -15,17 +15,17 @@ const Footer = () => {
             <span className="text-foreground">Smm</span><span className="text-gradient-premium">stable</span>
           </span>
         </button>
-        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6">
           <Link to="/services" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Services & Pricing</Link>
+          <Link to="/faq" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">FAQ</Link>
           <Link to="/how-to-use" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">How It Works</Link>
           <Link to="/api" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">API Docs</Link>
           <Link to="/about" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">About Us</Link>
-          <Link to="/auth?mode=signup" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Sign Up</Link>
           <Link to="/support" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Support</Link>
-          <a href="mailto:support@smmstable.com" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Email</a>
+          <Link to="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Terms</Link>
+          <Link to="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Privacy</Link>
           <a href="https://t.me/smmstable" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Telegram</a>
           <a href="https://instagram.com/smmstable" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Instagram</a>
-          <a href="https://facebook.com/smmstable" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Facebook</a>
         </div>
         <div className="flex flex-col items-center md:items-end gap-1">
           <p className="text-xs text-muted-foreground">© 2026 Smmstable. All rights reserved.</p>

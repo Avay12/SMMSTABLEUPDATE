@@ -51,6 +51,7 @@ const Navbar = () => {
 
         <div className="hidden items-center gap-6 md:flex">
           <Link to="/services" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Services</Link>
+          <Link to="/faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</Link>
           <Link to="/how-to-use" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</Link>
           <Link to="/api" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API</Link>
           <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">About Us</Link>
@@ -118,6 +119,7 @@ const Navbar = () => {
           <div className="flex flex-col h-full px-6 pt-8 pb-10">
             <nav className="flex flex-col gap-2 flex-1">
               <Link to="/services" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-3 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">Services & Pricing</Link>
+              <Link to="/faq" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-3 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">FAQ</Link>
               <Link to="/how-to-use" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-3 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">How It Works</Link>
               <Link to="/api" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-3 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">API Portal</Link>
               <Link to="/about" onClick={() => setMobileOpen(false)} className="text-lg font-medium text-foreground py-3 border-b border-border/50 active:bg-secondary/60 rounded-lg px-2 transition-colors">About Us</Link>
