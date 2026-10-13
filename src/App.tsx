@@ -70,6 +70,7 @@ const App = () => (
                 <Route path="/api" element={<PublicLayout><ApiPage /></PublicLayout>} />
                 <Route path="/support" element={<PublicLayout><SupportPage /></PublicLayout>} />
                 <Route path="/terms" element={<PublicLayout><TermsPage /></PublicLayout>} />
+                <Route path="/terms-and-conditions" element={<PublicLayout><TermsPage /></PublicLayout>} />
                 <Route path="/privacy" element={<PublicLayout><PrivacyPage /></PublicLayout>} />
 
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
@@ -89,6 +90,7 @@ const App = () => (
                   <Route path="about" element={<AboutPage />} />
                   <Route path="faq" element={<FaqPage />} />
                   <Route path="terms" element={<TermsPage />} />
+                  <Route path="terms-and-conditions" element={<TermsPage />} />
                   <Route path="privacy" element={<PrivacyPage />} />
                   <Route path="admin" element={<AdminPage />} />
                 </Route>

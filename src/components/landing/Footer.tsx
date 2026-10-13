@@ -22,8 +22,8 @@ const Footer = () => {
           <Link to="/api" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">API Docs</Link>
           <Link to="/about" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">About Us</Link>
           <Link to="/support" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Support</Link>
-          <Link to="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Terms</Link>
-          <Link to="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Privacy</Link>
+          <Link to="/terms-and-conditions" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Terms & Conditions</Link>
+          <Link to="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Privacy Policy</Link>
           <a href="https://t.me/smmstable" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Telegram</a>
           <a href="https://instagram.com/smmstable" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1">Instagram</a>
         </div>

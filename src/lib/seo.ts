@@ -96,9 +96,9 @@ export const PAGE_SEO = {
       "Find answers to common questions about Smmstable. Learn about delivery speed, account safety, payment methods, non-drop guarantees, and reseller API integration.",
   },
   terms: {
-    title: "Terms of Service — Smmstable SMM Panel",
+    title: "Terms and Conditions (Terms of Service) — Smmstable SMM Panel",
     description:
-      "Read the Terms of Service for Smmstable. Understand our service delivery policies, wallet balance conditions, refund terms, and API usage guidelines.",
+      "Official Terms and Conditions for Smmstable. Read our service delivery terms, zero password guarantee, wallet deposits, refill policies, and reseller API rules.",
   },
   privacy: {
     title: "Privacy Policy — Smmstable Secure SMM Services",
