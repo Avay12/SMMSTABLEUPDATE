@@ -497,6 +497,28 @@ const Auth = () => {
                   {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   {isLogin ? "Sign In" : "Create Account"}
                 </Button>
+
+                {!isLogin && (
+                  <p className="text-xs text-muted-foreground/70 text-center mt-3 leading-relaxed animate-fade-in">
+                    By creating an account you agree to our{" "}
+                    <Link
+                      to="/terms"
+                      target="_blank"
+                      className="text-primary/80 hover:text-primary hover:underline transition-colors font-medium"
+                    >
+                      Terms &amp; Conditions
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      to="/privacy"
+                      target="_blank"
+                      className="text-primary/80 hover:text-primary hover:underline transition-colors font-medium"
+                    >
+                      Privacy Policy
+                    </Link>
+                    .
+                  </p>
+                )}
               </div>
 
               {/* OAuth */}
